@@ -1,4 +1,5 @@
 // firebase-config.js
+// تم تحديث بيانات Firebase حسب المعلومات الجديدة.
 
 const firebaseConfig1885 = {
   apiKey: "AIzaSyCHg8UZV5iJh3O9fog4iSkrsQi4STugcrs",
@@ -7,9 +8,12 @@ const firebaseConfig1885 = {
   projectId: "kaood-6f44d",
   storageBucket: "kaood-6f44d.firebasestorage.app",
   messagingSenderId: "374769332160",
-  appId: "1:374769332160:web:ca7383372bfe3ed918a225",
-  measurementId: "G-BS9SVB853G"
+  appId: "1:374769332160:web:914adfe7c9daff7518a225",
+  measurementId: "G-4KBHRH8L57"
 };
+
+// Alias عادي لو احتجته في أي ملف إضافي.
+const firebaseConfig = firebaseConfig1885;
 
 const FIREBASE_PATHS_1885 = {
   settingsStore: "settings1885/store1885",
@@ -25,5 +29,6 @@ const STORAGE_KEYS_1885 = {
   cart: "tofan_cart_1885",
   wishlist: "tofan_wishlist_1885",
   checkoutSelection: "tofan_checkout_selection_1885",
-  selectedCategory: "tofan_selected_category_1885"
+  selectedCategory: "tofan_selected_category_1885",
+  selectedHomeSection: "tofan_selected_home_section_1885"
 };

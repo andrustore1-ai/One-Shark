@@ -1886,19 +1886,24 @@
       document.getElementById("selectedMethodName").textContent = getLocalizedPaymentMethodName(selectedMethod);
       document.getElementById("selectedMethodImage").src = selectedMethod.image || "https://via.placeholder.com/80?text=Pay";
 
-      copyWrap.innerHTML = (selectedMethod.copyFields || []).map(field => `
+      copyWrap.innerHTML = (selectedMethod.copyFields || []).map(field => {
+        const fieldImage = field.imageUrl || field.image || field.url || "";
+        return `
         <div class="copy-box">
           <div class="copy-box-title">${escapeHtml(pickText(field.labelAr || field.label, field.labelEn, field.label || tr("itemWord")))}</div>
           <div class="copy-box-value">${escapeHtml(field.value || '-')}</div>
-        </div>
-      `).join("") || `<div class="status-box">${tr("noReadyMethodData")}</div>`;
+          ${fieldImage ? `<img src="${escapeHtml(fieldImage)}" class="w-full rounded-2xl border object-contain bg-white mt-3 max-h-[420px]" alt="">` : ``}
+        </div>`;
+      }).join("") || `<div class="status-box">${tr("noReadyMethodData")}</div>`;
 
-      imgsWrap.innerHTML = (selectedMethod.extraImages || []).map(img => `
+      imgsWrap.innerHTML = (selectedMethod.extraImages || []).map(img => {
+        const imageUrl = img.url || img.imageUrl || img.image || "";
+        return `
         <div class="card p-3">
           ${img.label || img.labelAr || img.labelEn ? `<div class="field-label">${escapeHtml(pickText(img.labelAr || img.label, img.labelEn, img.label || ''))}</div>` : ``}
-          <img src="${escapeHtml(img.url || 'https://via.placeholder.com/700x300?text=Image')}" class="w-full rounded-2xl border object-cover bg-white" alt="">
-        </div>
-      `).join("");
+          <img src="${escapeHtml(imageUrl || 'https://via.placeholder.com/700x300?text=Image')}" class="w-full rounded-2xl border object-contain bg-white max-h-[420px]" alt="">
+        </div>`;
+      }).join("");
 
       if(selectedMethod.isCod){
         payerSection.classList.add("hidden-view");

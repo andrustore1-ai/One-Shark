@@ -482,7 +482,7 @@
 
       <div class="mb-5">
         <label class="label">كلمة المرور</label>
-        <input id="adminPassword" type="password" class="field" value="0000" placeholder="0000">
+        <input id="adminPassword" type="password" class="field" value="00000" placeholder="00000">
       </div>
 
       <button class="btn btn-primary w-full" onclick="adminLogin()">دخول الأدمن</button>
@@ -588,6 +588,23 @@
                 <option value="false">معطل</option>
               </select>
             </div>
+            <div>
+              <label class="label">تفعيل زر واتساب العائم</label>
+              <select id="storeWhatsappEnabled" class="field">
+                <option value="true">مفعل</option>
+                <option value="false">معطل</option>
+              </select>
+              <div class="hint">سيظهر زر واتساب عائم في واجهة المتجر عند تفعيله.</div>
+            </div>
+            <div>
+              <label class="label">رقم واتساب</label>
+              <input id="storeWhatsappNumber" class="field" placeholder="مثال: 970599000000 أو 9627xxxxxxxx">
+              <div class="hint">اكتب الرقم مع مفتاح الدولة بدون + أو مسافات.</div>
+            </div>
+            <div>
+              <label class="label">رسالة واتساب الافتراضية</label>
+              <input id="storeWhatsappMessage" class="field" placeholder="مرحباً، أريد الاستفسار عن المنتجات">
+            </div>
           </div>
 
           <div class="mt-5">
@@ -616,6 +633,15 @@
               <label class="label">صورة القسم</label>
               <input id="categoryImage" class="field" placeholder="https://example.com/category.jpg" oninput="renderCategoryVisualPreview()">
               <div class="hint">إذا أضفت صورة فسيتم عرضها بدل الأيقونة في المتجر.</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="label">قسم الواجهة الرئيسي</label>
+              <select id="categoryHomeSection" class="field">
+                <option value="sports">ملابس رياضية</option>
+                <option value="casual">ملابس كاجوال</option>
+              </select>
+              <div class="hint">سيظهر هذا القسم داخل الواجهة التي يختارها الزبون أولاً.</div>
             </div>
 
             <div class="mb-4">
@@ -740,6 +766,14 @@
             <input type="hidden" id="productEditId">
 
             <div class="mb-4"><label class="label">القسم</label><select id="productCategoryId" class="field"></select></div>
+            <div class="mb-4">
+              <label class="label">قسم الواجهة الرئيسي</label>
+              <select id="productHomeSection" class="field">
+                <option value="sports">ملابس رياضية</option>
+                <option value="casual">ملابس كاجوال</option>
+              </select>
+              <div class="hint">اختَر أين سيظهر المنتج: واجهة الملابس الرياضية أو واجهة الملابس الكاجوال.</div>
+            </div>
             <div class="mb-4"><label class="label">اسم المنتج بالعربي</label><input id="productNameAr" class="field" placeholder="مثال: حذاء رياضي"></div>
             <div class="mb-4"><label class="label">اسم المنتج بالإنجليزي</label><input id="productNameEn" class="field" placeholder="Example: Sport Shoes"></div>
             <div class="mb-4"><label class="label">وصف المنتج بالعربي</label><textarea id="productDescAr" class="field min-h-[100px]" placeholder="وصف المنتج بالعربي"></textarea></div>
@@ -794,6 +828,7 @@
 
             <div class="hidden">
               <textarea id="productColorOptions"></textarea>
+              <textarea id="productExtraImages"></textarea>
               <textarea id="productSizes"></textarea>
             </div>
 
@@ -992,8 +1027,8 @@
 
             <div class="mb-5">
               <div class="flex items-center justify-between mb-3">
-                <label class="label !mb-0">الصور الإضافية للطريقة</label>
-                <button class="btn btn-secondary" type="button" onclick="addPaymentExtraImageBuilder()">+ إضافة صورة</button>
+                <label class="label !mb-0">صور/باركود الدفع بالرابط</label>
+                <button class="btn btn-secondary" type="button" onclick="addPaymentExtraImageBuilder()">+ إضافة صورة أو QR</button>
               </div>
               <div id="paymentExtraImagesBuilder" class="space-y-3"></div>
             </div>
@@ -1098,8 +1133,8 @@
 
     window.DEFAULT_ADMIN_1885 = {
       email: "fayyatfade@gmail.com",
-      password: "0000",
-      mustChange: true,
+      password: "00000",
+      mustChange: false,
       updatedAt: Date.now()
     };
 
@@ -1136,6 +1171,7 @@
     ];
   </script>
 
+  <script src="admin-core.js"></script>
   <script src="admin2.js"></script>
 </body>
 </html>

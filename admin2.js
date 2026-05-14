@@ -89,12 +89,12 @@
   }
 
   window.clearProductColorBuilder = function clearProductColorBuilder() {
-    const wrap = byId("productColorImagesBuilder");
+    const wrap = byId("productColorsOnlyBuilder");
     if (wrap) wrap.innerHTML = "";
   };
 
   window.addProductColorImageBuilder = function addProductColorImageBuilder(data = {}) {
-    const wrap = byId("productColorImagesBuilder");
+    const wrap = byId("productColorsOnlyBuilder");
     if (!wrap) return;
 
     const el = document.createElement("div");
@@ -307,11 +307,16 @@
     addProductColorImageBuilder({ name: "بيج", code: "#f5f5dc", image: "" });
 
     if (byId("productColorOptions")) byId("productColorOptions").value = "[]";
+    if (typeof clearProductSliderImages === "function") clearProductSliderImages();
 
     resetProductSizesBuilder();
 
     if ((window.categoriesCache || [])[0] && byId("productCategoryId")) {
       byId("productCategoryId").value = window.categoriesCache[0].id;
+      const firstCat = window.categoriesCache[0];
+      if (byId("productHomeSection")) byId("productHomeSection").value = firstCat.homeSection || "sports";
+    } else if (byId("productHomeSection")) {
+      byId("productHomeSection").value = "sports";
     }
   };
 
@@ -323,6 +328,7 @@
     const payload = {
       categoryId: safeStr(byId("productCategoryId")?.value),
       category: safeStr(byId("productCategoryId")?.value),
+      homeSection: safeStr(byId("productHomeSection")?.value) || (typeof getCategoryHomeSectionById === "function" ? getCategoryHomeSectionById(safeStr(byId("productCategoryId")?.value)) : "sports"),
       name: safeStr(byId("productNameAr")?.value),
       nameAr: safeStr(byId("productNameAr")?.value),
       nameEn: safeStr(byId("productNameEn")?.value),
@@ -333,10 +339,10 @@
       oldPrice: Number(byId("productOldPrice")?.value || 0),
       image1: safeStr(byId("productImage1")?.value),
       image2: safeStr(byId("productImage2")?.value),
-      images: safeStr(byId("productExtraImages")?.value)
+      images: (typeof collectProductSliderImages === "function" ? collectProductSliderImages(true) : safeStr(byId("productExtraImages")?.value)
         .split("\n")
         .map(s => s.trim())
-        .filter(Boolean),
+        .filter(Boolean)),
       colorOptions,
       sizes,
       shippingFee: Number(byId("productShippingFee")?.value || 0),
@@ -387,6 +393,7 @@
 
     if (byId("productEditId")) byId("productEditId").value = p.id;
     if (byId("productCategoryId")) byId("productCategoryId").value = p.categoryId || "";
+    if (byId("productHomeSection")) byId("productHomeSection").value = p.homeSection || (typeof getCategoryHomeSectionById === "function" ? getCategoryHomeSectionById(p.categoryId) : "sports");
     if (byId("productNameAr")) byId("productNameAr").value = p.nameAr || "";
     if (byId("productNameEn")) byId("productNameEn").value = p.nameEn || "";
     if (byId("productDescAr")) byId("productDescAr").value = p.descAr || "";
@@ -395,6 +402,7 @@
     if (byId("productOldPrice")) byId("productOldPrice").value = p.oldPrice || 0;
     if (byId("productImage1")) byId("productImage1").value = p.image1 || "";
     if (byId("productImage2")) byId("productImage2").value = p.image2 || "";
+    if (typeof fillProductSliderImages === "function") fillProductSliderImages(asArray(p.images));
     if (byId("productExtraImages")) byId("productExtraImages").value = asArray(p.images).join("\n");
     if (byId("productShippingFee")) byId("productShippingFee").value = p.shippingFee || 0;
     if (byId("productFreeShipping")) byId("productFreeShipping").value = p.freeShipping ? "true" : "false";
@@ -493,7 +501,7 @@
 
           <div class="flex-1 min-w-0">
             <div class="font-black text-sm text-gray-900">${safeEscape(p.nameAr)} / ${safeEscape(p.nameEn || "-")}</div>
-            <div class="text-xs text-gray-400 font-bold mt-1">${safeEscape(getCategoryNameById(p.categoryId))} | ${safeMoney(p.price)}</div>
+            <div class="text-xs text-gray-400 font-bold mt-1">${safeEscape(getCategoryNameById(p.categoryId))} | ${typeof getHomeSectionLabel === "function" ? safeEscape(getHomeSectionLabel(p.homeSection || (typeof getCategoryHomeSectionById === "function" ? getCategoryHomeSectionById(p.categoryId) : "sports"))) + " | " : ""}${safeMoney(p.price)}</div>
             <div class="text-xs text-gray-400 font-bold mt-1">
               ${p.freeShipping ? "شحن مجاني" : `شحن: ${safeMoney(p.shippingFee)}`} |
               ${p.enableShipping ? "توصيل مفعل" : "توصيل معطل"} |
@@ -843,6 +851,12 @@
                   `).join("")
                 : `<div class="empty">لا توجد حقول معلومات دفع</div>`
             }
+            ${built.extraImages.length ? built.extraImages.map(img => `
+              <div class="preview-pay-box">
+                <div class="preview-pay-title">${safeEscape(img.labelAr || img.label || "صورة الدفع")}</div>
+                <img src="${safeEscape(img.url)}" class="w-full rounded-2xl border mt-3 bg-white" alt="">
+              </div>
+            `).join("") : ""}
           </div>
         </div>
 
@@ -865,6 +879,12 @@
                   `).join("")
                 : `<div class="empty">No payment info fields</div>`
             }
+            ${built.extraImages.length ? built.extraImages.map(img => `
+              <div class="preview-pay-box">
+                <div class="preview-pay-title">${safeEscape(img.labelEn || img.labelAr || img.label || "Payment image")}</div>
+                <img src="${safeEscape(img.url)}" class="w-full rounded-2xl border mt-3 bg-white" alt="">
+              </div>
+            `).join("") : ""}
           </div>
         </div>
       </div>
@@ -1184,7 +1204,7 @@
       resetPaymentForm();
     }
 
-    if (byId("productColorImagesBuilder") && !document.querySelector(".product-color-image-item")) {
+    if (byId("productColorsOnlyBuilder") && !document.querySelector(".product-color-image-item")) {
       resetProductForm();
     }
 
