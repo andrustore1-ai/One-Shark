@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tofan Store</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    :root{
+      --primary:#111111;
+      --accent:#f37021;
+      --bg:#f4f1ec;
+      --card:#ffffff;
+      --line:#e6dfd6;
+      --muted:#6b7280;
+      --text:#111827;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;}
+    .top-loading{position:fixed;top:0;right:0;height:3px;width:0;background:var(--accent);z-index:9999;transition:.25s}
+    .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:999px;font-weight:900;font-size:13px;z-index:99999;box-shadow:0 20px 45px rgba(0,0,0,.2);transition:.22s;white-space:nowrap}
+    .header{position:sticky;top:0;z-index:50;background:rgba(244,241,236,.82);backdrop-filter:blur(16px);border-bottom:1px solid rgba(17,17,17,.08)}
+    .brand-logo{width:42px;height:42px;border-radius:18px;object-fit:cover;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+    .hero{min-height:calc(100vh - 72px);position:relative;display:flex;align-items:center;overflow:hidden;background:linear-gradient(90deg,rgba(24,24,24,.15),rgba(244,241,236,.9),rgba(24,24,24,.15));}
+    .hero::before{content:"";position:absolute;inset:0;background:var(--hero-bg, linear-gradient(135deg,#d8d1c5,#f4f1ec));background-size:cover;background-position:center;opacity:.28;filter:grayscale(.2)}
+    .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(244,241,236,.48),rgba(244,241,236,.86));}
+    .hero-inner{position:relative;z-index:2;width:100%;max-width:980px;margin:0 auto;padding:56px 18px;text-align:center}
+    .season{font-weight:900;color:#49413b;font-size:clamp(14px,2.5vw,20px);margin-bottom:22px;letter-spacing:.2px}
+    .hero-title{font-size:clamp(34px,7vw,76px);line-height:1.35;font-weight:900;color:#050505;letter-spacing:-1.5px;margin-bottom:18px}
+    .hero-subtitle{font-size:clamp(16px,3vw,26px);line-height:1.8;font-weight:800;color:#514942;max-width:780px;margin:0 auto 42px}
+    .hero-actions{display:grid;grid-template-columns:1fr;gap:18px;max-width:860px;margin:0 auto}
+    @media(min-width:720px){.hero-actions{grid-template-columns:1fr 1fr}}
+    .hero-choice{height:92px;border-radius:42px;border:0;font-size:clamp(18px,3vw,28px);font-weight:900;cursor:pointer;transition:.2s;box-shadow:0 18px 45px rgba(0,0,0,.10)}
+    .hero-choice.dark{background:#050505;color:#fff}.hero-choice.light{background:#f3f3f3;color:#050505;border:1px solid rgba(0,0,0,.08)}
+    .hero-choice:hover{transform:translateY(-3px);box-shadow:0 24px 60px rgba(0,0,0,.16)}
+    .container-box{max-width:1240px;margin:0 auto;padding:24px 16px 96px}
+    .store-section{padding:28px 0 8px}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+    .section-kicker{font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px}.section-title{font-size:28px;font-weight:900;color:#111}.section-desc{font-size:13px;font-weight:800;color:var(--muted);margin-top:4px}
+    .chip-tabs{display:flex;gap:10px;overflow:auto;padding-bottom:4px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 16px;font-weight:900;font-size:13px;white-space:nowrap;cursor:pointer}.chip.active{background:#111;color:#fff;border-color:#111}
+    .categories-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:22px}@media(min-width:760px){.categories-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+    .cat-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:12px;display:flex;align-items:center;gap:12px;min-height:88px;cursor:pointer;transition:.2s}.cat-card:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.08)}.cat-card.active{border-color:#111;box-shadow:0 0 0 2px #111 inset}.cat-img{width:58px;height:58px;border-radius:22px;object-fit:cover;background:#f2eee9;display:flex;align-items:center;justify-content:center;font-weight:900}.cat-name{font-size:14px;font-weight:900}.cat-count{font-size:11px;color:var(--muted);font-weight:800;margin-top:3px}
+    .products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media(min-width:860px){.products-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
+    .product-card{background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.04);display:flex;flex-direction:column}.product-img-wrap{position:relative;background:#ece7df;aspect-ratio:3/4;overflow:hidden}.product-img{width:100%;height:100%;object-fit:cover;transition:.25s}.product-card:hover .product-img{transform:scale(1.04)}.badge{position:absolute;top:12px;right:12px;background:#111;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.product-body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}.product-name{font-size:15px;font-weight:900;line-height:1.5}.price-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.price{font-size:17px;font-weight:900;color:#111}.old-price{font-size:12px;font-weight:900;color:#9ca3af;text-decoration:line-through}.product-actions{margin-top:auto;display:grid;grid-template-columns:1fr;gap:8px}.btn{border:0;border-radius:18px;padding:12px 14px;font-weight:900;cursor:pointer;transition:.2s}.btn-dark{background:#111;color:#fff}.btn-light{background:#f3f4f6;color:#111}.btn:hover{transform:translateY(-1px)}
+    .empty{background:rgba(255,255,255,.7);border:1px dashed #d5ccc1;border-radius:28px;padding:24px;text-align:center;font-weight:900;color:#756c62}.footer{padding:36px 16px;text-align:center;color:#6b7280;font-weight:800}.wa-float{position:fixed;left:18px;bottom:18px;width:62px;height:62px;border-radius:999px;background:#25D366;color:#fff;display:none;align-items:center;justify-content:center;z-index:90;box-shadow:0 18px 38px rgba(0,0,0,.22);text-decoration:none}.wa-float svg{width:31px;height:31px}.cart-float{position:fixed;right:18px;bottom:18px;z-index:90;background:#111;color:#fff;border-radius:999px;padding:14px 18px;font-weight:900;box-shadow:0 18px 38px rgba(0,0,0,.22);display:flex;gap:8px;align-items:center}.cart-count{background:#fff;color:#111;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+    .skeleton{background:linear-gradient(90deg,#eee,#f8f8f8,#eee);background-size:200% 100%;animation:sk 1s infinite;border-radius:28px;height:260px}@keyframes sk{to{background-position:-200% 0}}
+  </style>
+</head>
+<body>
+  <div id="topLoading" class="top-loading"></div>
+
+  <header class="header">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div id="brandLogo" class="brand-logo">T</div>
+        <div class="min-w-0">
+          <div id="brandName" class="font-black text-lg truncate">Tofan Store</div>
+          <div id="brandDesc" class="text-xs text-gray-500 font-bold truncate">مجموعة الموسم الجديد</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-light !py-2 !px-3" onclick="scrollToHome()">الأقسام</button>
+        <button class="btn btn-dark !py-2 !px-3" onclick="location.href='login.html'">دخول</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="hero" class="hero">
+    <div class="hero-inner">
+      <div id="seasonText" class="season">مجموعة الموسم الجديد</div>
+      <h1 id="heroTitle" class="hero-title">أناقة بلا حدود.<br>راحة بلا تنازلات.</h1>
+      <p id="heroSubtitle" class="hero-subtitle">اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال</p>
+      <div class="hero-actions">
+        <button class="hero-choice dark" onclick="jumpToSection('sports')">ملابس رياضية</button>
+        <button class="hero-choice light" onclick="jumpToSection('casual')">ملابس كاجوال</button>
+      </div>
+    </div>
+  </section>
+
+  <main id="home" class="container-box">
+    <div id="loadingGrid" class="products-grid">
+      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+    <div id="sectionsWrap" class="hidden"></div>
+  </main>
+
+  <a id="whatsappFloat" class="wa-float" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16.02 3.2C9.02 3.2 3.34 8.86 3.34 15.82c0 2.22.58 4.39 1.69 6.29L3.2 28.8l6.86-1.8a12.73 12.73 0 005.96 1.52c7 0 12.68-5.66 12.68-12.62S23.02 3.2 16.02 3.2zm0 23.12c-1.92 0-3.8-.52-5.43-1.5l-.39-.23-4.07 1.07 1.09-3.96-.26-.41a10.36 10.36 0 01-1.6-5.47c0-5.75 4.78-10.42 10.66-10.42s10.66 4.67 10.66 10.42-4.78 10.5-10.66 10.5zm5.85-7.8c-.32-.16-1.9-.94-2.2-1.05-.29-.1-.5-.16-.72.16-.21.32-.82 1.05-1 1.26-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.58-.95-.85-1.6-1.9-1.78-2.22-.19-.32-.02-.49.14-.65.14-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.72-1.74-.99-2.38-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.1-1.12 2.68s1.15 3.1 1.31 3.31c.16.21 2.26 3.45 5.47 4.84.76.33 1.36.53 1.82.68.77.24 1.47.21 2.03.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.39.19-1.53-.08-.13-.29-.21-.61-.37z"/></svg>
+  </a>
+
+  <button id="cartFloat" class="cart-float" onclick="checkoutCart()">السلة <span id="cartCount" class="cart-count">0</span></button>
+
+  <footer class="footer">
+    <div id="footerName">Tofan Store</div>
+  </footer>
+
+  <script>
+    firebase.initializeApp(firebaseConfig1885);
+    const rtdb = firebase.database();
+
+    const PATHS = {
+      store: FIREBASE_PATHS_1885.settingsStore,
+      banners: FIREBASE_PATHS_1885.settingsBanners,
+      categories: FIREBASE_PATHS_1885.categories,
+      products: FIREBASE_PATHS_1885.products,
+      socialLinks: "settings1885/socialLinks1885"
+    };
+    const LOCAL_KEYS = {
+      cart: STORAGE_KEYS_1885.cart,
+      checkoutSelection: STORAGE_KEYS_1885.checkoutSelection,
+      selectedHomeSection: STORAGE_KEYS_1885.selectedHomeSection
+    };
+    const HOME_SECTIONS = [
+      { key:"sports", nameAr:"ملابس رياضية", nameEn:"Sportswear", desc:"منتجات مريحة وعملية للتمرين واليوم النشيط" },
+      { key:"casual", nameAr:"ملابس كاجوال", nameEn:"Casual Wear", desc:"قطع يومية أنيقة ومريحة لكل الأوقات" }
+    ];
+
+    let store = {}, banners = {}, categories = [], products = [], socialLinks = [];
+    let categoryFilters = { sports:"all", casual:"all" };
+
+    function $(id){return document.getElementById(id)}
+    function escapeHtml(v){return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+    function money(v){return `${Number(v || 0).toFixed(2)} ₪`}
+    function toast(msg){const old=document.querySelector('.toast');if(old)old.remove();const el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(16px)';setTimeout(()=>el.remove(),220)},1900)}
+    function setLoading(on){$('topLoading').style.width = on ? '65%' : '100%'; if(!on) setTimeout(()=>$('topLoading').style.width='0%',260)}
+    function safeArray(v){return Array.isArray(v) ? v : []}
+    function sectionInfo(key){return HOME_SECTIONS.find(x => x.key === key) || HOME_SECTIONS[0]}
+    function pick(ar,en,fallback=''){return ar || en || fallback}
+    function productSection(p){const cat = categories.find(c => c.id === p.categoryId); return p.homeSection || p.section || cat?.homeSection || 'sports'}
+    function getProductImage(p){return p.image1 || p.image || safeArray(p.images)[0] || 'https://via.placeholder.com/700x900?text=Product'}
+    function normalizeWhatsapp(raw){
+      const v = String(raw || '').trim();
+      if(!v) return '';
+      if(/^https?:\/\//i.test(v)) return v;
+      const digits = v.replace(/[^0-9]/g,'');
+      if(!digits) return '';
+      return `https://wa.me/${digits}`;
+    }
+    function getCart(){try{return JSON.parse(localStorage.getItem(LOCAL_KEYS.cart) || '[]')}catch{return []}}
+    function setCart(items){localStorage.setItem(LOCAL_KEYS.cart, JSON.stringify(items)); updateCartCount()}
+    function updateCartCount(){const count=getCart().reduce((s,i)=>s+Number(i.qty||1),0);$('cartCount').textContent=count}
+
+    function mapCategories(raw){
+      return Object.entries(raw || {}).map(([id,v]) => ({
+        id,
+        nameAr:v.nameAr || v.name || '', nameEn:v.nameEn || '', image:v.image || '', icon:v.icon || 'shirt',
+        homeSection:v.homeSection || v.section || 'sports', order:Number(v.order || 0), enabled:v.enabled !== false
+      })).filter(x => x.enabled).sort((a,b)=>a.order-b.order);
+    }
+    function mapProducts(raw){
+      return Object.entries(raw || {}).map(([id,v]) => ({
+        id, categoryId:v.categoryId || v.category || '', homeSection:v.homeSection || v.section || '',
+        nameAr:v.nameAr || v.name || '', nameEn:v.nameEn || '', descAr:v.descAr || v.desc || '', descEn:v.descEn || '',
+        price:Number(v.price || 0), oldPrice:Number(v.oldPrice || 0), image1:v.image1 || v.image || '', image2:v.image2 || '', images:safeArray(v.images),
+        colorOptions:safeArray(v.colorOptions), sizes:safeArray(v.sizes), shippingFee:Number(v.shippingFee || 0), freeShipping:v.freeShipping === true,
+        enableShipping:v.enableShipping === true, enableCod:v.enableCod !== false, order:Number(v.order || 0), enabled:v.enabled !== false, createdAt:Number(v.createdAt || 0)
+      })).filter(x => x.enabled).sort((a,b)=>(a.order-b.order)||(b.createdAt-a.createdAt));
+    }
+    function mapSocial(raw){return Object.entries(raw || {}).map(([id,v])=>({id, platform:String(v.platform||'').toLowerCase(), url:v.url||'', enabled:v.enabled!==false, order:Number(v.order||0)})).filter(x=>x.enabled).sort((a,b)=>a.order-b.order)}
+
+    function applyStore(){
+      const name = store.storeNameAr || store.storeName || 'Tofan Store';
+      $('brandName').textContent = name;
+      $('footerName').textContent = name;
+      $('brandDesc').textContent = store.storeDescAr || 'مجموعة الموسم الجديد';
+      $('seasonText').textContent = store.heroKickerAr || 'مجموعة الموسم الجديد';
+      $('heroTitle').innerHTML = (store.heroTitleAr || 'أناقة بلا حدود.<br>راحة بلا تنازلات.');
+      $('heroSubtitle').textContent = store.heroSubtitleAr || store.storeDescAr || 'اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال';
+      if(store.storeLogoUrl){$('brandLogo').innerHTML = `<img src="${escapeHtml(store.storeLogoUrl)}" class="w-full h-full object-cover rounded-[18px]" alt="">`}
+      const heroBg = banners.topBannerUrl || store.topBannerUrl || store.storeTopBannerUrl || '';
+      if(heroBg){$('hero').style.setProperty('--hero-bg', `url('${heroBg.replaceAll("'", "%27")}')`)}
+      const wa = normalizeWhatsapp(store.storeWhatsappNumber || store.whatsappNumber || store.whatsapp || (socialLinks.find(x => x.platform === 'whatsapp')?.url || ''));
+      if(wa){$('whatsappFloat').href = wa; $('whatsappFloat').style.display = 'flex'}
+    }
+
+    function renderSection(key){
+      const info = sectionInfo(key);
+      const cats = categories.filter(c => (c.homeSection || 'sports') === key);
+      const filter = categoryFilters[key] || 'all';
+      let sectionProducts = products.filter(p => productSection(p) === key);
+      if(filter !== 'all') sectionProducts = sectionProducts.filter(p => p.categoryId === filter);
+
+      const catButtons = [`<button class="chip ${filter==='all'?'active':''}" onclick="setCategoryFilter('${key}','all')">كل المنتجات</button>`]
+        .concat(cats.map(c => `<button class="chip ${filter===c.id?'active':''}" onclick="setCategoryFilter('${key}','${c.id}')">${escapeHtml(pick(c.nameAr,c.nameEn,c.id))}</button>`)).join('');
+
+      const catsHtml = cats.length ? cats.map(c => {
+        const count = products.filter(p => productSection(p) === key && p.categoryId === c.id).length;
+        return `<div class="cat-card ${filter===c.id?'active':''}" onclick="setCategoryFilter('${key}','${c.id}')">
+          ${c.image ? `<img src="${escapeHtml(c.image)}" class="cat-img" alt="">` : `<div class="cat-img">${escapeHtml((pick(c.nameAr,c.nameEn,'?')).slice(0,1))}</div>`}
+          <div><div class="cat-name">${escapeHtml(pick(c.nameAr,c.nameEn,c.id))}</div><div class="cat-count">${count} منتج</div></div>
+        </div>`
+      }).join('') : `<div class="empty col-span-full">لا توجد أقسام داخل ${escapeHtml(info.nameAr)} حتى الآن</div>`;
+
+      const productsHtml = sectionProducts.length ? sectionProducts.map(p => {
+        const discount = p.oldPrice > p.price && p.price > 0 ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+        return `<article class="product-card">
+          <div class="product-img-wrap">
+            <img src="${escapeHtml(getProductImage(p))}" class="product-img" alt="${escapeHtml(pick(p.nameAr,p.nameEn,'Product'))}">
+            ${discount ? `<span class="badge">-${discount}%</span>` : ``}
+          </div>
+          <div class="product-body">
+            <div class="product-name">${escapeHtml(pick(p.nameAr,p.nameEn,'منتج'))}</div>
+            <div class="price-row"><span class="price">${money(p.price)}</span>${p.oldPrice ? `<span class="old-price">${money(p.oldPrice)}</span>` : ``}</div>
+            <div class="product-actions">
+              <button class="btn btn-dark" onclick="buyNow('${p.id}')">شراء الآن</button>
+              <button class="btn btn-light" onclick="addToCart('${p.id}')">إضافة للسلة</button>
+            </div>
+          </div>
+        </article>`;
+      }).join('') : `<div class="empty col-span-full">لا توجد منتجات متاحة داخل ${escapeHtml(info.nameAr)} حالياً</div>`;
+
+      return `<section id="section-${key}" class="store-section">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">${key === 'sports' ? 'SPORTS' : 'CASUAL'}</div>
+            <h2 class="section-title">${escapeHtml(info.nameAr)}</h2>
+            <p class="section-desc">${escapeHtml(info.desc)}</p>
+          </div>
+          <div class="chip-tabs">${catButtons}</div>
+        </div>
+        <div class="categories-grid">${catsHtml}</div>
+        <div class="products-grid">${productsHtml}</div>
+      </section>`;
+    }
+
+    function renderAll(){
+      $('loadingGrid').classList.add('hidden');
+      $('sectionsWrap').classList.remove('hidden');
+      $('sectionsWrap').innerHTML = HOME_SECTIONS.map(x => renderSection(x.key)).join('');
+      updateCartCount();
+    }
+    function setCategoryFilter(section, categoryId){categoryFilters[section]=categoryId; renderAll(); document.getElementById(`section-${section}`)?.scrollIntoView({behavior:'smooth', block:'start'})}
+    function jumpToSection(section){try{sessionStorage.setItem(LOCAL_KEYS.selectedHomeSection, section)}catch(e){} document.getElementById(`section-${section}`)?.scrollIntoView({behavior:'smooth', block:'start'})}
+    function scrollToHome(){document.getElementById('home')?.scrollIntoView({behavior:'smooth', block:'start'})}
+
+    function checkout(items, source='buy_now'){
+      const clean = items.map(item => ({id:item.id, qty:Math.max(1,Number(item.qty||1)), nameAr:item.nameAr||'', nameEn:item.nameEn||'', price:Number(item.price||0), image1:item.image1||'', image2:item.image2||''}));
+      sessionStorage.setItem(LOCAL_KEYS.checkoutSelection, JSON.stringify({source, items:clean, createdAt:Date.now()}));
+      location.href = 'pay.html';
+    }
+    function buyNow(id){const p=products.find(x=>x.id===id); if(!p)return toast('المنتج غير متاح'); checkout([{...p, qty:1}], 'buy_now')}
+    function addToCart(id){const p=products.find(x=>x.id===id); if(!p)return toast('المنتج غير متاح'); const cart=getCart(); const found=cart.find(x=>x.id===id); if(found) found.qty=Number(found.qty||1)+1; else cart.push({id:p.id, qty:1, nameAr:p.nameAr, nameEn:p.nameEn, price:p.price, image1:p.image1, image2:p.image2}); setCart(cart); toast('تمت الإضافة للسلة')}
+    function checkoutCart(){const cart=getCart(); if(!cart.length) return toast('السلة فارغة'); checkout(cart, 'cart')}
+
+    async function loadAll(){
+      setLoading(true);
+      try{
+        const [storeSnap,bannersSnap,catsSnap,productsSnap,socialSnap] = await Promise.all([
+          rtdb.ref(PATHS.store).get(), rtdb.ref(PATHS.banners).get(), rtdb.ref(PATHS.categories).get(), rtdb.ref(PATHS.products).get(), rtdb.ref(PATHS.socialLinks).get()
+        ]);
+        store = storeSnap.val() || {};
+        banners = bannersSnap.val() || {};
+        categories = mapCategories(catsSnap.val() || {});
+        products = mapProducts(productsSnap.val() || {});
+        socialLinks = mapSocial(socialSnap.val() || {});
+        applyStore();
+        renderAll();
+      }catch(e){
+        console.error(e);
+        $('loadingGrid').innerHTML = `<div class="empty col-span-full">تعذر تحميل بيانات المتجر. تأكد من إعدادات Firebase.</div>`;
+      }finally{
+        setLoading(false);
+      }
+    }
+    window.addEventListener('load', loadAll);
+  </script>
+</body>
+</html>
