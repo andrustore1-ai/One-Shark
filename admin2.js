@@ -82,23 +82,6 @@
     return found ? (found.nameAr || found.nameEn || found.id) : "-";
   }
 
-  function getCategoryHomeSection(categoryId) {
-    const found = (window.categoriesCache || []).find(c => c.id === categoryId);
-    return found ? (found.homeSection || "sports") : "sports";
-  }
-
-  function getHomeSectionNameSafe(key) {
-    if (typeof window.getHomeSectionName === "function") return window.getHomeSectionName(key || "sports");
-    const found = (window.HOME_SECTIONS_1885 || []).find(x => x.key === key);
-    return found ? found.nameAr : (key === "casual" ? "ملابس كاجوال" : "ملابس رياضية");
-  }
-
-  window.syncProductHomeSectionFromCategory = function syncProductHomeSectionFromCategory() {
-    const catId = safeStr(byId("productCategoryId")?.value);
-    const section = getCategoryHomeSection(catId);
-    if (byId("productHomeSection")) byId("productHomeSection").value = section || "sports";
-  };
-
   function collectCheckedDefaultSizes() {
     return [...document.querySelectorAll(".product-size-check:checked")]
       .map(el => String(el.value || "").trim())
@@ -330,9 +313,6 @@
     if ((window.categoriesCache || [])[0] && byId("productCategoryId")) {
       byId("productCategoryId").value = window.categoriesCache[0].id;
     }
-    if (byId("productHomeSection")) {
-      byId("productHomeSection").value = getCategoryHomeSection(byId("productCategoryId")?.value) || "sports";
-    }
   };
 
   window.saveProduct = async function saveProduct() {
@@ -343,7 +323,6 @@
     const payload = {
       categoryId: safeStr(byId("productCategoryId")?.value),
       category: safeStr(byId("productCategoryId")?.value),
-      homeSection: safeStr(byId("productHomeSection")?.value) || getCategoryHomeSection(safeStr(byId("productCategoryId")?.value)) || "sports",
       name: safeStr(byId("productNameAr")?.value),
       nameAr: safeStr(byId("productNameAr")?.value),
       nameEn: safeStr(byId("productNameEn")?.value),
@@ -408,7 +387,6 @@
 
     if (byId("productEditId")) byId("productEditId").value = p.id;
     if (byId("productCategoryId")) byId("productCategoryId").value = p.categoryId || "";
-    if (byId("productHomeSection")) byId("productHomeSection").value = p.homeSection || getCategoryHomeSection(p.categoryId) || "sports";
     if (byId("productNameAr")) byId("productNameAr").value = p.nameAr || "";
     if (byId("productNameEn")) byId("productNameEn").value = p.nameEn || "";
     if (byId("productDescAr")) byId("productDescAr").value = p.descAr || "";
@@ -515,7 +493,7 @@
 
           <div class="flex-1 min-w-0">
             <div class="font-black text-sm text-gray-900">${safeEscape(p.nameAr)} / ${safeEscape(p.nameEn || "-")}</div>
-            <div class="text-xs text-gray-400 font-bold mt-1">${safeEscape(getCategoryNameById(p.categoryId))} | ${safeEscape(getHomeSectionNameSafe(p.homeSection || getCategoryHomeSection(p.categoryId)))} | ${safeMoney(p.price)}</div>
+            <div class="text-xs text-gray-400 font-bold mt-1">${safeEscape(getCategoryNameById(p.categoryId))} | ${safeMoney(p.price)}</div>
             <div class="text-xs text-gray-400 font-bold mt-1">
               ${p.freeShipping ? "شحن مجاني" : `شحن: ${safeMoney(p.shippingFee)}`} |
               ${p.enableShipping ? "توصيل مفعل" : "توصيل معطل"} |
@@ -548,26 +526,17 @@
     const box = byId("paymentPreviewBox");
     if (!box) return;
 
-    if (!built.copyFields.length && !built.extraImages.length) {
+    if (!built.copyFields.length) {
       box.innerHTML = `<div class="empty">لا توجد معاينة بعد</div>`;
       return;
     }
 
-    const fieldsHtml = built.copyFields.map(item => `
+    box.innerHTML = built.copyFields.map(item => `
       <div class="preview-pay-box">
         <div class="preview-pay-title">${safeEscape(item.labelAr || "حقل")} / ${safeEscape(item.labelEn || "-")}</div>
         <div class="text-sm font-black pt-2 break-all">${safeEscape(item.value || "-")}</div>
       </div>
     `).join("");
-
-    const imagesHtml = built.extraImages.map(img => `
-      <div class="preview-pay-box">
-        <div class="preview-pay-title">${safeEscape(img.labelAr || img.label || "صورة الدفع")}</div>
-        <img src="${safeEscape(img.url || "https://via.placeholder.com/700x300?text=Payment")}" class="w-full rounded-2xl border object-cover bg-white mt-2" alt="">
-      </div>
-    `).join("");
-
-    box.innerHTML = fieldsHtml + imagesHtml;
   };
 
   window.addPaymentCopyFieldBuilder = function addPaymentCopyFieldBuilder(data = {}) {
@@ -611,23 +580,22 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label class="label">عنوان الصورة بالعربي</label>
-          <input class="field payment-extra-image-label-ar" value="${safeEscape(data.labelAr || data.label || "")}" placeholder="مثال: QR Code" oninput="renderPaymentPreview()">
+          <input class="field payment-extra-image-label-ar" value="${safeEscape(data.labelAr || data.label || "")}" placeholder="مثال: QR Code">
         </div>
         <div>
           <label class="label">عنوان الصورة بالإنجليزي</label>
-          <input class="field payment-extra-image-label-en" value="${safeEscape(data.labelEn || "")}" placeholder="Example: QR Code" oninput="renderPaymentPreview()">
+          <input class="field payment-extra-image-label-en" value="${safeEscape(data.labelEn || "")}" placeholder="Example: QR Code">
         </div>
         <div class="md:col-span-2">
           <label class="label">رابط الصورة</label>
-          <input class="field payment-extra-image-url" value="${safeEscape(data.url || "")}" placeholder="https://example.com/pay-image.jpg" oninput="renderPaymentPreview()">
+          <input class="field payment-extra-image-url" value="${safeEscape(data.url || "")}" placeholder="https://example.com/pay-image.jpg">
         </div>
       </div>
       <div class="mt-3">
-        <button type="button" class="btn btn-danger" onclick="this.closest('.payment-extra-image-item').remove(); renderPaymentPreview();">حذف</button>
+        <button type="button" class="btn btn-danger" onclick="this.closest('.payment-extra-image-item').remove()">حذف</button>
       </div>
     `;
     wrap.appendChild(el);
-    renderPaymentPreview();
   };
 
   window.addPaymentPayerFieldBuilder = function addPaymentPayerFieldBuilder(data = {}) {
@@ -875,12 +843,6 @@
                   `).join("")
                 : `<div class="empty">لا توجد حقول معلومات دفع</div>`
             }
-            ${built.extraImages.map(img => `
-              <div class="preview-pay-box">
-                <div class="preview-pay-title">${safeEscape(img.labelAr || img.label || "صورة الدفع")}</div>
-                <img src="${safeEscape(img.url || "https://via.placeholder.com/700x300?text=Payment")}" class="w-full rounded-2xl border object-cover bg-white mt-2" alt="">
-              </div>
-            `).join("")}
           </div>
         </div>
 
@@ -903,12 +865,6 @@
                   `).join("")
                 : `<div class="empty">No payment info fields</div>`
             }
-            ${built.extraImages.map(img => `
-              <div class="preview-pay-box">
-                <div class="preview-pay-title">${safeEscape(img.labelEn || img.labelAr || img.label || "Payment Image")}</div>
-                <img src="${safeEscape(img.url || "https://via.placeholder.com/700x300?text=Payment")}" class="w-full rounded-2xl border object-cover bg-white mt-2" alt="">
-              </div>
-            `).join("")}
           </div>
         </div>
       </div>

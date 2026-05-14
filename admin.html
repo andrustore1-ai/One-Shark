@@ -582,7 +582,6 @@
             <div><label class="label">وصف المتجر بالإنجليزي</label><textarea id="storeDescEn" class="field min-h-[110px]" placeholder="Short store description"></textarea></div>
             <div><label class="label">رابط الشعار</label><input id="storeLogoUrl" class="field" placeholder="https://example.com/logo.png"></div>
             <div><label class="label">رابط البانر الرئيسي</label><input id="storeTopBannerUrl" class="field" placeholder="https://example.com/banner.jpg"></div>
-            <div><label class="label">رقم واتساب العائم</label><input id="storeWhatsappNumber" class="field" placeholder="مثال: 970599000000 أو https://wa.me/970599000000"><div class="hint">يظهر كزر واتساب عائم في واجهة المتجر. يمكن إدخال رقم فقط أو رابط كامل.</div></div>
             <div>
               <label class="label">تفعيل الدفع عند الاستلام عالميًا</label>
               <select id="enableCodGlobal" class="field">
@@ -612,15 +611,6 @@
             <div class="mb-4">
               <label class="label">اسم القسم بالإنجليزي</label>
               <input id="categoryNameEn" class="field" placeholder="Example: Shoes">
-            </div>
-
-            <div class="mb-4">
-              <label class="label">قسم الواجهة الرئيسي</label>
-              <select id="categoryHomeSection" class="field">
-                <option value="sports">ملابس رياضية</option>
-                <option value="casual">ملابس كاجوال</option>
-              </select>
-              <div class="hint">هذا يحدد أين يظهر القسم في واجهة المتجر الرئيسية.</div>
             </div>
 
             <div class="mb-4">
@@ -750,8 +740,7 @@
             <h3 class="font-black text-xl text-[#14454d] mb-5">إضافة / تعديل منتج</h3>
             <input type="hidden" id="productEditId">
 
-            <div class="mb-4"><label class="label">القسم</label><select id="productCategoryId" class="field" onchange="syncProductHomeSectionFromCategory()"></select></div>
-            <div class="mb-4"><label class="label">قسم الواجهة الرئيسي</label><select id="productHomeSection" class="field"><option value="sports">ملابس رياضية</option><option value="casual">ملابس كاجوال</option></select><div class="hint">اختيار المنتج في أي واجهة يظهر: الرياضية أو الكاجوال.</div></div>
+            <div class="mb-4"><label class="label">القسم</label><select id="productCategoryId" class="field"></select></div>
             <div class="mb-4"><label class="label">اسم المنتج بالعربي</label><input id="productNameAr" class="field" placeholder="مثال: حذاء رياضي"></div>
             <div class="mb-4"><label class="label">اسم المنتج بالإنجليزي</label><input id="productNameEn" class="field" placeholder="Example: Sport Shoes"></div>
             <div class="mb-4"><label class="label">وصف المنتج بالعربي</label><textarea id="productDescAr" class="field min-h-[100px]" placeholder="وصف المنتج بالعربي"></textarea></div>
@@ -1102,18 +1091,6 @@
       socialLinks: "settings1885/socialLinks1885"
     };
     window.PATHS = PATHS;
-
-    const HOME_SECTIONS_1885 = [
-      { key: "sports", nameAr: "ملابس رياضية", nameEn: "Sportswear" },
-      { key: "casual", nameAr: "ملابس كاجوال", nameEn: "Casual Wear" }
-    ];
-    window.HOME_SECTIONS_1885 = HOME_SECTIONS_1885;
-
-    function getHomeSectionName(key){
-      const found = HOME_SECTIONS_1885.find(x => x.key === String(key || "").trim());
-      return found ? found.nameAr : "ملابس رياضية";
-    }
-    window.getHomeSectionName = getHomeSectionName;
 
     const DEFAULT_ADMIN = {
       email: "",
@@ -1493,7 +1470,6 @@
     function mapCategories(raw){
       return Object.entries(raw || {}).map(([id, v]) => ({
         id, nameAr:v.nameAr || v.name || "", nameEn:v.nameEn || "", image:v.image || "", icon:v.icon || "shirt",
-        homeSection:v.homeSection || v.section || "sports",
         order:Number(v.order || 0), enabled:v.enabled !== false
       })).sort((a,b) => a.order - b.order);
     }
@@ -1502,7 +1478,6 @@
       return Object.entries(raw || {}).map(([id, v]) => ({
         id,
         categoryId:v.categoryId || v.category || "",
-        homeSection:v.homeSection || v.section || "",
         nameAr:v.nameAr || v.name || "",
         nameEn:v.nameEn || "",
         descAr:v.descAr || v.desc || "",
@@ -1588,13 +1563,12 @@
       document.getElementById("storeDescEn").value = store.storeDescEn || "";
       document.getElementById("storeLogoUrl").value = store.storeLogoUrl || "";
       document.getElementById("storeTopBannerUrl").value = banners.topBannerUrl || store.topBannerUrl || "";
-      document.getElementById("storeWhatsappNumber").value = store.storeWhatsappNumber || store.whatsappNumber || store.whatsapp || "";
       document.getElementById("enableCodGlobal").value = store.enableCodGlobal === false ? "false" : "true";
     }
 
     function fillCategoryOptions(){
       const opts = categoriesCache.length
-        ? categoriesCache.map(c => `<option value="${c.id}" data-home-section="${escapeHtml(c.homeSection || 'sports')}">${escapeHtml(c.nameAr || c.nameEn || c.id)} - ${escapeHtml(getHomeSectionName(c.homeSection))}</option>`).join("")
+        ? categoriesCache.map(c => `<option value="${c.id}">${escapeHtml(c.nameAr || c.nameEn || c.id)}</option>`).join("")
         : `<option value="">لا توجد أقسام</option>`;
       document.getElementById("productCategoryId").innerHTML = opts;
     }
@@ -1602,7 +1576,7 @@
     function fillProductsFilter(){
       document.getElementById("productsFilterCategory").innerHTML =
         `<option value="all">كل الأقسام</option>` +
-        categoriesCache.map(c => `<option value="${c.id}">${escapeHtml(c.nameAr || c.nameEn || c.id)} - ${escapeHtml(getHomeSectionName(c.homeSection))}</option>`).join("");
+        categoriesCache.map(c => `<option value="${c.id}">${escapeHtml(c.nameAr || c.nameEn || c.id)}</option>`).join("");
     }
 
     function fillGlobalCheckoutFieldsBox(){
@@ -1707,8 +1681,6 @@
           storeDescAr: str(document.getElementById("storeDescAr").value),
           storeDescEn: str(document.getElementById("storeDescEn").value),
           storeLogoUrl: str(document.getElementById("storeLogoUrl").value),
-          storeWhatsappNumber: str(document.getElementById("storeWhatsappNumber").value),
-          whatsappNumber: str(document.getElementById("storeWhatsappNumber").value),
           enableCodGlobal: document.getElementById("enableCodGlobal").value === "true",
           updatedAt: Date.now()
         };
@@ -2028,7 +2000,6 @@
       document.getElementById("categoryEditId").value = "";
       document.getElementById("categoryNameAr").value = "";
       document.getElementById("categoryNameEn").value = "";
-      document.getElementById("categoryHomeSection").value = "sports";
       document.getElementById("categoryImage").value = "";
       document.getElementById("categoryIcon").value = "shirt";
       document.getElementById("categoryOrder").value = "";
@@ -2043,7 +2014,6 @@
       const payload = {
         nameAr: str(document.getElementById("categoryNameAr").value),
         nameEn: str(document.getElementById("categoryNameEn").value),
-        homeSection: str(document.getElementById("categoryHomeSection").value) || "sports",
         image: str(document.getElementById("categoryImage").value),
         icon: str(document.getElementById("categoryIcon").value) || "shirt",
         order: Number(document.getElementById("categoryOrder").value || 0),
@@ -2079,7 +2049,6 @@
       document.getElementById("categoryEditId").value = c.id;
       document.getElementById("categoryNameAr").value = c.nameAr;
       document.getElementById("categoryNameEn").value = c.nameEn;
-      document.getElementById("categoryHomeSection").value = c.homeSection || "sports";
       document.getElementById("categoryImage").value = c.image || "";
       document.getElementById("categoryIcon").value = c.icon || "shirt";
       document.getElementById("categoryOrder").value = c.order;
@@ -2122,7 +2091,7 @@
             }
             <div>
               <div class="font-black text-sm text-gray-900">${escapeHtml(c.nameAr)} / ${escapeHtml(c.nameEn || "-")}</div>
-              <div class="text-xs text-gray-400 font-bold mt-1">واجهة: ${escapeHtml(getHomeSectionName(c.homeSection))} | icon: ${escapeHtml(c.icon)} | order: ${c.order} | ${c.enabled ? "مفعل" : "معطل"}</div>
+              <div class="text-xs text-gray-400 font-bold mt-1">icon: ${escapeHtml(c.icon)} | order: ${c.order} | ${c.enabled ? "مفعل" : "معطل"}</div>
             </div>
           </div>
           <div class="flex gap-2">

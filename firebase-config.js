@@ -1,14 +1,14 @@
 // firebase-config.js
 
 const firebaseConfig1885 = {
-  apiKey: "AIzaSyCHg8UZV5iJh3O9fog4iSkrsQi4STugcrs",
-  authDomain: "kaood-6f44d.firebaseapp.com",
-  databaseURL: "https://kaood-6f44d-default-rtdb.firebaseio.com",
-  projectId: "kaood-6f44d",
-  storageBucket: "kaood-6f44d.firebasestorage.app",
-  messagingSenderId: "374769332160",
-  appId: "1:374769332160:web:914adfe7c9daff7518a225",
-  measurementId: "G-4KBHRH8L57"
+  apiKey: "AIzaSyCnLAY7zQyBy7gUuL9wszt9aEhiJgvRmxI",
+  authDomain: "shop-d52dc.firebaseapp.com",
+  databaseURL: "https://shop-d52dc-default-rtdb.firebaseio.com",
+  projectId: "shop-d52dc",
+  storageBucket: "shop-d52dc.appspot.com",
+  messagingSenderId: "97580537866",
+  appId: "1:97580537866:web:abc46e5a2f527b6300a7f3",
+  measurementId: "G-956RQMBP42"
 };
 
 const FIREBASE_PATHS_1885 = {
@@ -25,6 +25,5 @@ const STORAGE_KEYS_1885 = {
   cart: "tofan_cart_1885",
   wishlist: "tofan_wishlist_1885",
   checkoutSelection: "tofan_checkout_selection_1885",
-  selectedCategory: "tofan_selected_category_1885",
-  selectedHomeSection: "tofan_selected_home_section_1885"
+  selectedCategory: "tofan_selected_category_1885"
 };
