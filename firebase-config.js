@@ -1,14 +1,14 @@
 // firebase-config.js
 
 const firebaseConfig1885 = {
-  apiKey: "AIzaSyCnLAY7zQyBy7gUuL9wszt9aEhiJgvRmxI",
-  authDomain: "shop-d52dc.firebaseapp.com",
-  databaseURL: "https://shop-d52dc-default-rtdb.firebaseio.com",
-  projectId: "shop-d52dc",
-  storageBucket: "shop-d52dc.appspot.com",
-  messagingSenderId: "97580537866",
-  appId: "1:97580537866:web:abc46e5a2f527b6300a7f3",
-  measurementId: "G-956RQMBP42"
+  apiKey: "AIzaSyA_UmO_2zIQ4NOL6lgCwNzMImmjtcE9seA",
+  authDomain: "tofan-e55e7.firebaseapp.com",
+  databaseURL: "https://tofan-e55e7-default-rtdb.firebaseio.com",
+  projectId: "tofan-e55e7",
+  storageBucket: "tofan-e55e7.firebasestorage.app",
+  messagingSenderId: "158213758411",
+  appId: "1:158213758411:web:1e6b3050130a445832aa4e",
+  measurementId: "G-C1MP0758Z0"
 };
 
 const FIREBASE_PATHS_1885 = {

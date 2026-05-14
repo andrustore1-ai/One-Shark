@@ -137,65 +137,28 @@
       .product-view{grid-template-columns:1fr}
     }
 
-    /* Slider: every move shows 2 images */
-    .gallery-shell{
-      position:relative;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:20px;
+    .slider-shell{
+      position:relative;background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;
+      min-height:320px;
+    }
+
+    .slider-track{
+      display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;height:100%;
+    }
+    .slider-track::-webkit-scrollbar{display:none}
+
+    .slide-item{
+      min-width:100%;scroll-snap-align:start;position:relative;background:#f4f6f8;aspect-ratio:1/1;
       overflow:hidden;
-      padding:10px 10px 6px;
     }
 
-    .gallery-viewport{
-      overflow:hidden;
-      width:100%;
-      direction:ltr;
+    .slide-item img{
+      width:100%;height:100%;object-fit:cover;display:block;
+      opacity:0;transition:opacity .35s ease, transform .35s ease;
     }
+    .slide-item img.loaded{opacity:1}
 
-    .gallery-track{
-      display:flex;
-      transition:transform .42s ease;
-      will-change:transform;
-    }
-
-    .gallery-page{
-      min-width:100%;
-      width:100%;
-      flex:0 0 100%;
-    }
-
-    .gallery-pair{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-    }
-
-    .gallery-item{
-      position:relative;
-      width:100%;
-      height:100%;
-      border:none;
-      border-radius:14px;
-      overflow:hidden;
-      background:#f4f6f8;
-      cursor:pointer;
-      padding:0;
-      display:block;
-      border:1px solid #edf2f7;
-    }
-
-    .gallery-item img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-      opacity:0;
-      transition:opacity .3s ease;
-    }
-    .gallery-item img.loaded{opacity:1}
-
-    .gallery-thumb-loader{
+    .slide-loader{
       position:absolute;inset:0;
       background:linear-gradient(90deg,#f1f5f9 25%,#e5e7eb 37%,#f1f5f9 63%);
       background-size:400% 100%;
@@ -208,108 +171,33 @@
       100%{background-position:-100% 0}
     }
 
-    .gallery-btn{
-      position:absolute;
-      top:50%;
-      transform:translateY(-50%);
-      width:40px;
-      height:40px;
-      border:none;
-      border-radius:999px;
-      background:rgba(17,24,39,.84);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:6;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(0,0,0,.16);
+    .slider-btn{
+      position:absolute;top:50%;transform:translateY(-50%);
+      width:38px;height:38px;border:none;border-radius:999px;background:rgba(17,24,39,.82);
+      color:#fff;display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer;
     }
-    .gallery-btn.prev{right:12px}
-    .gallery-btn.next{left:12px}
-    .gallery-btn.hidden{display:none}
+    .slider-btn.prev{right:12px}
+    .slider-btn.next{left:12px}
 
-    .gallery-dots{
-      display:flex;
-      justify-content:center;
-      gap:6px;
-      padding:12px 6px 4px;
+    .slider-dots{display:flex;justify-content:center;gap:6px;padding:12px}
+    .slider-dot{
+      width:8px;height:8px;border-radius:999px;background:#cbd5e1;border:none;transition:.2s;cursor:pointer;
     }
-    .gallery-dot{
-      width:8px;height:8px;border-radius:999px;background:#cbd5e1;border:none;transition:.22s;cursor:pointer;
-    }
-    .gallery-dot.active{
-      width:22px;
-      background:var(--primary);
-    }
+    .slider-dot.active{width:22px;background:var(--primary)}
 
     .discount-chip{
-      position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;
+      position:absolute;top:14px;right:14px;background:var(--accent);color:#fff;
       min-width:58px;height:30px;padding:0 12px;border-radius:999px;font-size:11px;
-      display:flex;align-items:center;justify-content:center;font-weight:900;z-index:7;
+      display:flex;align-items:center;justify-content:center;font-weight:900;z-index:4;
       box-shadow:0 8px 18px rgba(243,112,33,.26);
     }
 
-    .image-preview-modal{
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.75);
-      backdrop-filter:blur(5px);
-      z-index:10000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
+    .logo-watermark{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      pointer-events:none;z-index:2;
     }
-
-    .image-preview-box{
-      position:relative;
-      width:min(100%,760px);
-      min-height:260px;
-      background:#fff;
-      border-radius:26px;
-      overflow:hidden;
-      border:1px solid #e5e7eb;
-      box-shadow:0 24px 60px rgba(0,0,0,.22);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-    }
-
-    .image-preview-close{
-      position:absolute;
-      top:12px;
-      left:12px;
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:999px;
-      background:rgba(17,24,39,.9);
-      color:#fff;
-      font-size:24px;
-      font-weight:900;
-      cursor:pointer;
-      z-index:4;
-      line-height:1;
-    }
-
-    .image-preview-loader{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.92);
-      z-index:2;
-    }
-
-    .image-preview-img{
-      max-width:100%;
-      max-height:80vh;
-      object-fit:contain;
-      display:none;
-      border-radius:18px;
+    .logo-watermark img{
+      width:92px;height:92px;object-fit:contain;opacity:.12;filter:drop-shadow(0 10px 24px rgba(0,0,0,.16));
     }
 
     .color-row, .size-row{
@@ -434,6 +322,12 @@
       color:var(--primary);font-size:28px;font-weight:900;line-height:1.2;
     }
 
+    .fade-switch{animation:fadeSwitch .28s ease}
+    @keyframes fadeSwitch{
+      from{opacity:.35;transform:scale(.985)}
+      to{opacity:1;transform:scale(1)}
+    }
+
     .qty-box{
       display:flex;align-items:center;justify-content:space-between;gap:12px;
       padding:12px 14px;border:1px solid #edf2f6;border-radius:18px;background:#fbfdff;
@@ -520,11 +414,6 @@
       .section-title{font-size:20px}
       .summary-total .v{font-size:24px}
       .piece-thumb,.selected-item-thumb{width:64px;height:64px;flex-basis:64px}
-      .image-preview-box{padding:14px}
-      .gallery-shell{padding:8px 8px 4px}
-      .gallery-pair{gap:8px}
-      .gallery-btn{width:36px;height:36px}
-      .discount-chip{top:10px;right:10px}
     }
   </style>
 </head>
@@ -536,19 +425,6 @@
     <div class="loader-box">
       <div class="spinner"></div>
       <div id="overlayLoadingText" class="font-black text-[var(--primary)] text-sm">جاري المعالجة...</div>
-    </div>
-  </div>
-
-  <div id="imagePreviewModal" class="image-preview-modal hidden-view" onclick="handlePreviewBackdrop(event)">
-    <div class="image-preview-box">
-      <button class="image-preview-close" type="button" onclick="closeImagePreview()">×</button>
-      <div id="imagePreviewLoader" class="image-preview-loader">
-        <div class="loader-box" style="box-shadow:none;border:0;padding:0;background:transparent;">
-          <div class="spinner"></div>
-          <div class="font-black text-[var(--primary)] text-sm">جاري تحميل الصورة...</div>
-        </div>
-      </div>
-      <img id="imagePreviewImg" class="image-preview-img" alt="preview">
     </div>
   </div>
 
@@ -589,25 +465,26 @@
     <section id="viewProduct" class="view-panel">
       <div class="product-view">
         <div class="card p-3">
-          <div class="gallery-shell">
+          <div class="slider-shell">
             <div id="discountBadge" class="discount-chip hidden-view">0% -</div>
 
-            <button id="galleryPrevBtn" class="gallery-btn prev hidden" type="button" onclick="moveGallerySlider(-1)">
+            <button class="slider-btn prev" id="sliderPrevBtn" onclick="moveSlider(-1)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
             </button>
-
-            <button id="galleryNextBtn" class="gallery-btn next hidden" type="button" onclick="moveGallerySlider(1)">
+            <button class="slider-btn next" id="sliderNextBtn" onclick="moveSlider(1)">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
             </button>
 
-            <div class="gallery-viewport">
-              <div id="productGalleryTrack" class="gallery-track"></div>
-            </div>
+            <div class="slider-track" id="productSliderTrack" onscroll="syncSliderDots()"></div>
 
-            <div id="productGalleryDots" class="gallery-dots"></div>
+            <div class="logo-watermark">
+              <img id="watermarkLogo" src="" alt="logo">
+            </div>
           </div>
 
-          <div id="colorsWrap" class="mt-4 hidden-view">
+          <div class="slider-dots" id="productSliderDots"></div>
+
+          <div id="colorsWrap" class="mt-2 hidden-view">
             <div id="colorsLabel" class="field-label">الألوان المتاحة</div>
             <div class="color-row" id="colorsRow"></div>
           </div>
@@ -927,7 +804,9 @@
         noItemsToast: "لا توجد منتجات محددة",
         sendSuccess: "تم إرسال الطلب بنجاح",
         sendFail: "تم إرسال الطلب",
-        reviewWithout: "بدون"
+        reviewWithout: "بدون",
+        colorDefaultText: "اللون: الافتراضي",
+        sizeNoneText: "المقاس: بدون"
       },
       en: {
         title: "Checkout",
@@ -1018,7 +897,9 @@
         noItemsToast: "No selected products",
         sendSuccess: "Order submitted successfully",
         sendFail: "Order submitted successfully",
-        reviewWithout: "None"
+        reviewWithout: "None",
+        colorDefaultText: "Color: Default",
+        sizeNoneText: "Size: None"
       }
     };
 
@@ -1158,9 +1039,7 @@
     let selectedShippingZone = null;
     let withoutLoginMode = false;
     let currentColorIndex = 0;
-    let currentGalleryImages = [];
-    let currentGalleryPages = [];
-    let currentGalleryPageIndex = 0;
+    let currentSliderImages = [];
     let selectedSize = "";
     let activeEditorItemIndex = 0;
     let activeUnitIndex = 0;
@@ -1246,177 +1125,25 @@
       return pickText(field.placeholderAr || field.placeholder, field.placeholderEn, field.placeholder || "");
     }
 
-    function getProductImages(item){
+    function getProductSliderImages(item){
       const images = [];
 
-      // Use homepage images array first (الصورة من صفحة البداية)
-      if(Array.isArray(item.images) && item.images.length){
+      if(Array.isArray(item.images)){
         item.images.forEach(img => {
-          const s = String(img || "").trim();
-          if(s) images.push(s);
+          if(String(img || "").trim()) images.push(String(img).trim());
         });
       }
 
-      // Fallback to dedicated checkout images only if no homepage images found
-      if(!images.length){
-        const img1 = String(item.image1 || "").trim();
-        const img2 = String(item.image2 || "").trim();
-        if(img1) images.push(img1);
-        if(img2) images.push(img2);
-      }
+      if(item.image1) images.push(String(item.image1).trim());
+      if(item.image2) images.push(String(item.image2).trim());
 
-      if(!images.length){
-        images.push("https://via.placeholder.com/800x800?text=Image");
-      }
-
-      return [...new Set(images)];
-    }
-
-    function preloadImages(images = []){
-      const safe = Array.isArray(images) ? images.filter(Boolean) : [];
-      if(!safe.length) return Promise.resolve();
-
-      return Promise.all(
-        safe.map(src => new Promise(resolve => {
-          const img = new Image();
-          img.onload = resolve;
-          img.onerror = resolve;
-          img.src = src;
-        }))
-      );
-    }
-
-    function chunkImages(images, size = 2){
-      const chunks = [];
-      for(let i = 0; i < images.length; i += size){
-        chunks.push(images.slice(i, i + size));
-      }
-      return chunks;
+      const unique = [...new Set(images.filter(Boolean))];
+      return unique.length ? unique : ["https://via.placeholder.com/800x800?text=Image"];
     }
 
     function getDefaultProductThumb(item){
-      const imgs = getProductImages(item);
+      const imgs = getProductSliderImages(item);
       return imgs[0] || "https://via.placeholder.com/500x700?text=Image";
-    }
-
-    function openImagePreview(src){
-      const modal = document.getElementById("imagePreviewModal");
-      const img = document.getElementById("imagePreviewImg");
-      const loader = document.getElementById("imagePreviewLoader");
-
-      modal.classList.remove("hidden-view");
-      loader.style.display = "flex";
-      img.style.display = "none";
-
-      img.onload = function(){
-        loader.style.display = "none";
-        img.style.display = "block";
-      };
-      img.onerror = function(){
-        loader.style.display = "none";
-        img.style.display = "block";
-      };
-
-      img.src = src;
-    }
-
-    function openImagePreviewFromEl(el){
-      const src = el.getAttribute("data-src") || "";
-      if(src) openImagePreview(src);
-    }
-
-    function closeImagePreview(){
-      const modal = document.getElementById("imagePreviewModal");
-      const img = document.getElementById("imagePreviewImg");
-      const loader = document.getElementById("imagePreviewLoader");
-
-      modal.classList.add("hidden-view");
-      img.style.display = "none";
-      img.src = "";
-      loader.style.display = "flex";
-    }
-
-    function handlePreviewBackdrop(e){
-      if(e.target.id === "imagePreviewModal"){
-        closeImagePreview();
-      }
-    }
-
-    window.addEventListener("keydown", (e) => {
-      if(e.key === "Escape"){
-        closeImagePreview();
-      }
-    });
-
-    function updateGallerySliderPosition(){
-      const track = document.getElementById("productGalleryTrack");
-      const dots = [...document.querySelectorAll(".gallery-dot")];
-
-      track.style.transform = `translateX(-${currentGalleryPageIndex * 100}%)`;
-      dots.forEach((dot, i) => dot.classList.toggle("active", i === currentGalleryPageIndex));
-
-      const hasMany = currentGalleryPages.length > 1;
-      document.getElementById("galleryPrevBtn").classList.toggle("hidden", !hasMany);
-      document.getElementById("galleryNextBtn").classList.toggle("hidden", !hasMany);
-    }
-
-    function moveGallerySlider(dir){
-      if(!currentGalleryPages.length) return;
-
-      currentGalleryPageIndex += dir;
-
-      if(currentGalleryPageIndex < 0){
-        currentGalleryPageIndex = currentGalleryPages.length - 1;
-      }
-      if(currentGalleryPageIndex >= currentGalleryPages.length){
-        currentGalleryPageIndex = 0;
-      }
-
-      updateGallerySliderPosition();
-    }
-
-    function goToGalleryPage(index){
-      currentGalleryPageIndex = index;
-      updateGallerySliderPosition();
-    }
-
-    function createGalleryPairItem(img){
-      return `
-        <button type="button" class="gallery-item" data-src="${escapeHtml(img)}" onclick="openImagePreviewFromEl(this)">
-          <div class="gallery-thumb-loader"></div>
-          <img
-            src="${escapeHtml(img)}"
-            alt="product image"
-            loading="eager"
-            decoding="async"
-            referrerpolicy="no-referrer"
-            onload="this.classList.add('loaded'); const l=this.previousElementSibling; if(l) l.style.display='none';"
-            onerror="this.classList.add('loaded'); const l=this.previousElementSibling; if(l) l.style.display='none';"
-          >
-        </button>
-      `;
-    }
-
-    function renderGallerySlider(images){
-      const track = document.getElementById("productGalleryTrack");
-      const dots = document.getElementById("productGalleryDots");
-      const safeImages = Array.isArray(images) && images.length ? images : ["https://via.placeholder.com/800x800?text=Image"];
-
-      currentGalleryImages = safeImages;
-      currentGalleryPages = safeImages.map(img => [img]); // One image per page
-      currentGalleryPageIndex = 0;
-
-      track.innerHTML = currentGalleryPages.map(page => `
-        <div class="gallery-page">
-          ${page.map(img => createGalleryPairItem(img)).join("")}
-        </div>
-      `).join("");
-
-      dots.innerHTML = currentGalleryPages.length > 1
-        ? currentGalleryPages.map((_, i) => `<button type="button" class="gallery-dot ${i === 0 ? 'active' : ''}" onclick="goToGalleryPage(${i})"></button>`).join("")
-        : "";
-
-      updateGallerySliderPosition();
     }
 
     function setStep(step){
@@ -1584,18 +1311,8 @@
         nameAr: tr("codName"),
         nameEn: TRANSLATIONS.en.codName,
         copyFields: [
-          {
-            label: tr("codField1Label"),
-            labelAr: TRANSLATIONS.ar.codField1Label,
-            labelEn: TRANSLATIONS.en.codField1Label,
-            value: isEnglish() ? TRANSLATIONS.en.codField1Value : TRANSLATIONS.ar.codField1Value
-          },
-          {
-            label: tr("codField2Label"),
-            labelAr: TRANSLATIONS.ar.codField2Label,
-            labelEn: TRANSLATIONS.en.codField2Label,
-            value: isEnglish() ? TRANSLATIONS.en.codField2Value : TRANSLATIONS.ar.codField2Value
-          }
+          { label: tr("codField1Label"), labelAr: TRANSLATIONS.ar.codField1Label, labelEn: TRANSLATIONS.en.codField1Label, value: isEnglish() ? TRANSLATIONS.en.codField1Value : TRANSLATIONS.ar.codField1Value },
+          { label: tr("codField2Label"), labelAr: TRANSLATIONS.ar.codField2Label, labelEn: TRANSLATIONS.en.codField2Label, value: isEnglish() ? TRANSLATIONS.en.codField2Value : TRANSLATIONS.ar.codField2Value }
         ]
       };
 
@@ -1637,6 +1354,10 @@
       return sizes.map(s => String(s || "").trim()).filter(Boolean);
     }
 
+    function getColorPreviewImage(item, colorIndex){
+      return getDefaultProductThumb(item);
+    }
+
     function getColorName(item, colorIndex){
       const colors = Array.isArray(item.colorOptions) ? item.colorOptions : [];
       return colors[colorIndex]?.name || "";
@@ -1644,7 +1365,6 @@
 
     function ensureUnitSelections(item){
       if(!item) return;
-
       const qty = Math.max(1, Number(item.qty || 1));
       item.qty = qty;
 
@@ -1672,7 +1392,7 @@
           colorIndex,
           colorName: hasColors ? getColorName(item, colorIndex) : "",
           size,
-          image: defaultImage
+          image: prev.image || defaultImage
         });
       }
 
@@ -1748,7 +1468,7 @@
 
         return `
           <div class="selected-item-card ${idx===activeEditorItemIndex ? 'active' : ''}" onclick="selectEditorItem(${idx})">
-            <img src="${escapeHtml(getDefaultProductThumb(item))}" class="selected-item-thumb" alt="">
+            <img src="${escapeHtml(sample.image || getDefaultProductThumb(item))}" class="selected-item-thumb" alt="">
             <div class="flex-1 min-w-0">
               <div class="selected-item-name">${escapeHtml(getLocalizedProductName(item))}</div>
               <div class="selected-item-sub">${tr("count")}: ${item.qty}${sampleText ? ` • ${escapeHtml(sampleText)}` : ''}</div>
@@ -1781,7 +1501,7 @@
       wrap.innerHTML = item.unitSelections.map((unit, idx) => `
         <div class="piece-card ${idx===activeUnitIndex ? 'active' : ''}" onclick="selectPiece(${idx})">
           <div class="piece-index">${idx + 1}</div>
-          <img class="piece-thumb" src="${escapeHtml(getDefaultProductThumb(item))}" alt="">
+          <img class="piece-thumb" src="${escapeHtml(unit.image || getDefaultProductThumb(item))}" alt="">
           <div class="flex-1 min-w-0">
             <div class="piece-title">${tr("piece")} ${idx + 1}</div>
             <div class="piece-meta">
@@ -1820,6 +1540,8 @@
         el.classList.toggle("active", el.textContent.trim() === selectedSize);
       });
 
+      currentSliderImages = getProductSliderImages(item);
+      renderSlider(currentSliderImages);
       document.getElementById("editorQtyValue").textContent = item.qty;
     }
 
@@ -1855,15 +1577,63 @@
         badge.classList.add("hidden-view");
       }
 
+      document.getElementById("watermarkLogo").src = storeSettings.storeLogoUrl || "";
       document.getElementById("editorQtyValue").textContent = item.qty;
+
       currentColorIndex = activeUnit?.colorIndex >= 0 ? activeUnit.colorIndex : 0;
       selectedSize = activeUnit?.size || "";
 
-      renderGallerySlider(getProductImages(item));
+      currentSliderImages = getProductSliderImages(item);
+
+      renderSlider(currentSliderImages);
       renderColors(item);
       renderSizes(item);
       renderUnitPieces(item);
       syncControlsFromActiveUnit();
+    }
+
+    function createSlide(img){
+      return `
+        <div class="slide-item fade-switch">
+          <div class="slide-loader"></div>
+          <img src="${escapeHtml(img)}" alt="product image" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+               onload="this.classList.add('loaded'); const l=this.previousElementSibling; if(l) l.style.display='none';"
+               onerror="this.classList.add('loaded'); const l=this.previousElementSibling; if(l) l.style.display='none';">
+        </div>
+      `;
+    }
+
+    function renderSlider(images){
+      const track = document.getElementById("productSliderTrack");
+      const dots = document.getElementById("productSliderDots");
+      const safeImages = Array.isArray(images) && images.length ? images : ["https://via.placeholder.com/800x800?text=Image"];
+
+      track.innerHTML = safeImages.map(img => createSlide(img)).join("");
+      dots.innerHTML = safeImages.map((_, i) => `<button class="slider-dot ${i===0?'active':''}" onclick="goToSlide(${i})"></button>`).join("");
+
+      const hasMany = safeImages.length > 1;
+      document.getElementById("sliderPrevBtn").style.display = hasMany ? "flex" : "none";
+      document.getElementById("sliderNextBtn").style.display = hasMany ? "flex" : "none";
+      track.scrollTo({ left: 0, behavior: "auto" });
+    }
+
+    function moveSlider(dir){
+      const track = document.getElementById("productSliderTrack");
+      track.scrollBy({ left: track.clientWidth * dir, behavior:"smooth" });
+      setTimeout(syncSliderDots, 220);
+    }
+
+    function goToSlide(index){
+      const track = document.getElementById("productSliderTrack");
+      track.scrollTo({ left: track.clientWidth * index, behavior:"smooth" });
+      setTimeout(syncSliderDots, 220);
+    }
+
+    function syncSliderDots(){
+      const track = document.getElementById("productSliderTrack");
+      const dots = [...document.querySelectorAll(".slider-dot")];
+      const idx = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+      dots.forEach((dot, i) => dot.classList.toggle("active", i === idx));
     }
 
     function renderColors(item){
@@ -1896,6 +1666,7 @@
 
       unit.colorIndex = index;
       unit.colorName = getColorName(item, index);
+
       currentColorIndex = index;
 
       document.querySelectorAll("#colorsRow .color-chip").forEach((chip, i) => {
@@ -2309,7 +2080,7 @@
         return `
           <div class="border border-[#eef2f6] rounded-2xl p-3">
             <div class="flex items-center gap-3">
-              <img src="${escapeHtml(getDefaultProductThumb(item))}" class="w-16 h-16 rounded-2xl object-cover border" alt="">
+              <img src="${escapeHtml(item.unitSelections[0]?.image || getDefaultProductThumb(item))}" class="w-16 h-16 rounded-2xl object-cover border" alt="">
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-black text-gray-800 line-clamp-2">${escapeHtml(getLocalizedProductName(item))}</div>
                 <div class="text-xs text-gray-400 font-bold mt-1">${tr("count")}: ${item.qty}</div>
@@ -2516,7 +2287,6 @@
 
     async function loadAll(){
       setLoadingBar(true);
-      setOverlayLoading(true);
       try{
         currentLang = getSavedLanguage();
         applyStaticTranslations();
@@ -2535,7 +2305,7 @@
         productsMap = normalizeProducts(productsSnap.val() || {});
         paymentMethods = normalizePaymentMethods(methodsSnap.val() || {});
         shippingZones = normalizeShippingZones(shippingSnap.val() || {});
-        globalFields = normalizeGlobalFields(globalFieldsSnap.val() || {});
+        globalFields = normalizeGlobalFields(globalFieldsSnap.val() || []);
 
         checkoutSelection.items = enrichCheckoutItems(checkoutSelection.items || []);
         persistCheckoutSelection();
@@ -2546,11 +2316,8 @@
           return;
         }
 
-        const allImages = [];
-        checkoutSelection.items.forEach(item => {
-          getProductImages(item).forEach(img => allImages.push(img));
-        });
-        await preloadImages([...new Set(allImages)]);
+        const logo = storeSettings.storeLogoUrl || "";
+        document.getElementById("watermarkLogo").src = logo;
 
         renderSelectedItems();
         renderProductPreview();
@@ -2572,7 +2339,6 @@
         updateMethodPayAmount();
         showView(1);
       }finally{
-        setOverlayLoading(false);
         setLoadingBar(false);
       }
     }
