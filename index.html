@@ -26,34 +26,49 @@
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;}
+    body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;min-height:100vh;}
+    body.drawer-open{overflow:hidden}
     .top-loading{position:fixed;top:0;right:0;height:3px;width:0;background:var(--accent);z-index:9999;transition:.25s}
     .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:999px;font-weight:900;font-size:13px;z-index:99999;box-shadow:0 20px 45px rgba(0,0,0,.2);transition:.22s;white-space:nowrap}
-    .header{position:sticky;top:0;z-index:50;background:rgba(244,241,236,.82);backdrop-filter:blur(16px);border-bottom:1px solid rgba(17,17,17,.08)}
-    .brand-logo{width:42px;height:42px;border-radius:18px;object-fit:cover;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
-    .hero{min-height:calc(100vh - 72px);position:relative;display:flex;align-items:center;overflow:hidden;background:linear-gradient(90deg,rgba(24,24,24,.15),rgba(244,241,236,.9),rgba(24,24,24,.15));}
-    .hero::before{content:"";position:absolute;inset:0;background:var(--hero-bg, linear-gradient(135deg,#d8d1c5,#f4f1ec));background-size:cover;background-position:center;opacity:.28;filter:grayscale(.2)}
-    .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(244,241,236,.48),rgba(244,241,236,.86));}
-    .hero-inner{position:relative;z-index:2;width:100%;max-width:980px;margin:0 auto;padding:56px 18px;text-align:center}
-    .season{font-weight:900;color:#49413b;font-size:clamp(14px,2.5vw,20px);margin-bottom:22px;letter-spacing:.2px}
-    .hero-title{font-size:clamp(34px,7vw,76px);line-height:1.35;font-weight:900;color:#050505;letter-spacing:-1.5px;margin-bottom:18px}
-    .hero-subtitle{font-size:clamp(16px,3vw,26px);line-height:1.8;font-weight:800;color:#514942;max-width:780px;margin:0 auto 42px}
-    .hero-actions{display:grid;grid-template-columns:1fr;gap:18px;max-width:860px;margin:0 auto}
-    @media(min-width:720px){.hero-actions{grid-template-columns:1fr 1fr}}
-    .hero-choice{height:92px;border-radius:42px;border:0;font-size:clamp(18px,3vw,28px);font-weight:900;cursor:pointer;transition:.2s;box-shadow:0 18px 45px rgba(0,0,0,.10)}
-    .hero-choice.dark{background:#050505;color:#fff}.hero-choice.light{background:#f3f3f3;color:#050505;border:1px solid rgba(0,0,0,.08)}
-    .hero-choice:hover{transform:translateY(-3px);box-shadow:0 24px 60px rgba(0,0,0,.16)}
+    .header{position:sticky;top:0;z-index:80;background:rgba(244,241,236,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(17,17,17,.08)}
+    .brand-logo{width:42px;height:42px;border-radius:18px;object-fit:cover;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;overflow:hidden}
+    .menu-btn{width:44px;height:44px;border:0;border-radius:16px;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(0,0,0,.06);cursor:pointer}
+    .menu-btn svg{width:24px;height:24px}
+    .btn{border:0;border-radius:18px;padding:12px 14px;font-weight:900;cursor:pointer;transition:.2s}.btn-dark{background:#111;color:#fff}.btn-light{background:#f3f4f6;color:#111}.btn:hover{transform:translateY(-1px)}
+
+    .home-hero{min-height:calc(100vh - 69px);display:flex;align-items:center;justify-content:center;background:#050505;padding:0;overflow:hidden;position:relative}
+    .hero-frame{position:relative;width:min(100vw,560px);height:min(calc(100vh - 69px),704px);aspect-ratio:1017/1280;max-height:calc(100vh - 69px);background:#000;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden}
+    .hero-frame img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+    .hero-hit{position:absolute;right:6.8%;left:6.8%;height:10.7%;border:0;background:transparent;border-radius:999px;cursor:pointer;z-index:2;color:transparent;font-size:0}
+    .hero-hit:focus-visible{outline:4px solid rgba(255,255,255,.95);outline-offset:4px;background:rgba(255,255,255,.05)}
+    .hero-hit.sports{top:58.4%}.hero-hit.casual{top:71.2%}
+
     .container-box{max-width:1240px;margin:0 auto;padding:24px 16px 96px}
-    .store-section{padding:28px 0 8px}
+    .store-section{padding:12px 0 8px}
     .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
     .section-kicker{font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px}.section-title{font-size:28px;font-weight:900;color:#111}.section-desc{font-size:13px;font-weight:800;color:var(--muted);margin-top:4px}
     .chip-tabs{display:flex;gap:10px;overflow:auto;padding-bottom:4px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 16px;font-weight:900;font-size:13px;white-space:nowrap;cursor:pointer}.chip.active{background:#111;color:#fff;border-color:#111}
     .categories-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:22px}@media(min-width:760px){.categories-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
     .cat-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:12px;display:flex;align-items:center;gap:12px;min-height:88px;cursor:pointer;transition:.2s}.cat-card:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.08)}.cat-card.active{border-color:#111;box-shadow:0 0 0 2px #111 inset}.cat-img{width:58px;height:58px;border-radius:22px;object-fit:cover;background:#f2eee9;display:flex;align-items:center;justify-content:center;font-weight:900}.cat-name{font-size:14px;font-weight:900}.cat-count{font-size:11px;color:var(--muted);font-weight:800;margin-top:3px}
     .products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media(min-width:860px){.products-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}}
-    .product-card{background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.04);display:flex;flex-direction:column}.product-img-wrap{position:relative;background:#ece7df;aspect-ratio:3/4;overflow:hidden}.product-img{width:100%;height:100%;object-fit:cover;transition:.25s}.product-card:hover .product-img{transform:scale(1.04)}.badge{position:absolute;top:12px;right:12px;background:#111;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.product-body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}.product-name{font-size:15px;font-weight:900;line-height:1.5}.price-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.price{font-size:17px;font-weight:900;color:#111}.old-price{font-size:12px;font-weight:900;color:#9ca3af;text-decoration:line-through}.product-actions{margin-top:auto;display:grid;grid-template-columns:1fr;gap:8px}.btn{border:0;border-radius:18px;padding:12px 14px;font-weight:900;cursor:pointer;transition:.2s}.btn-dark{background:#111;color:#fff}.btn-light{background:#f3f4f6;color:#111}.btn:hover{transform:translateY(-1px)}
-    .empty{background:rgba(255,255,255,.7);border:1px dashed #d5ccc1;border-radius:28px;padding:24px;text-align:center;font-weight:900;color:#756c62}.footer{padding:36px 16px;text-align:center;color:#6b7280;font-weight:800}.wa-float{position:fixed;left:18px;bottom:18px;width:62px;height:62px;border-radius:999px;background:#25D366;color:#fff;display:none;align-items:center;justify-content:center;z-index:90;box-shadow:0 18px 38px rgba(0,0,0,.22);text-decoration:none}.wa-float svg{width:31px;height:31px}.cart-float{position:fixed;right:18px;bottom:18px;z-index:90;background:#111;color:#fff;border-radius:999px;padding:14px 18px;font-weight:900;box-shadow:0 18px 38px rgba(0,0,0,.22);display:flex;gap:8px;align-items:center}.cart-count{background:#fff;color:#111;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+    .product-card{background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.04);display:flex;flex-direction:column}.product-img-wrap{position:relative;background:#ece7df;aspect-ratio:3/4;overflow:hidden}.product-img{width:100%;height:100%;object-fit:cover;transition:.25s}.product-card:hover .product-img{transform:scale(1.04)}.badge{position:absolute;top:12px;right:12px;background:#111;color:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.product-body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}.product-name{font-size:15px;font-weight:900;line-height:1.5}.price-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.price{font-size:17px;font-weight:900;color:#111}.old-price{font-size:12px;font-weight:900;color:#9ca3af;text-decoration:line-through}.product-actions{margin-top:auto;display:grid;grid-template-columns:1fr;gap:8px}
+    .empty{background:rgba(255,255,255,.7);border:1px dashed #d5ccc1;border-radius:28px;padding:24px;text-align:center;font-weight:900;color:#756c62}.footer{padding:36px 16px;text-align:center;color:#6b7280;font-weight:800}.wa-float{position:fixed;left:18px;bottom:18px;width:62px;height:62px;border-radius:999px;background:#25D366;color:#fff;display:none;align-items:center;justify-content:center;z-index:90;box-shadow:0 18px 38px rgba(0,0,0,.22);text-decoration:none}.wa-float svg{width:31px;height:31px}.cart-float{position:fixed;right:18px;bottom:18px;z-index:90;background:#111;color:#fff;border:0;border-radius:999px;padding:14px 18px;font-weight:900;box-shadow:0 18px 38px rgba(0,0,0,.22);display:none;gap:8px;align-items:center}.cart-count{background:#fff;color:#111;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
     .skeleton{background:linear-gradient(90deg,#eee,#f8f8f8,#eee);background-size:200% 100%;animation:sk 1s infinite;border-radius:28px;height:260px}@keyframes sk{to{background-position:-200% 0}}
+
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:100;opacity:0;visibility:hidden;transition:.2s}
+    .drawer-backdrop.active{opacity:1;visibility:visible}
+    .drawer{position:fixed;top:0;right:0;height:100vh;width:min(86vw,360px);background:#fff;z-index:101;transform:translateX(105%);transition:.25s ease;box-shadow:-20px 0 60px rgba(0,0,0,.18);display:flex;flex-direction:column}
+    .drawer.active{transform:translateX(0)}
+    .drawer-head{padding:18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .drawer-title{font-size:19px;font-weight:900;color:#111}
+    .drawer-sub{font-size:12px;font-weight:800;color:#6b7280;margin-top:3px}
+    .drawer-close{width:40px;height:40px;border:0;border-radius:14px;background:#f3f4f6;color:#111;font-weight:900;cursor:pointer}
+    .drawer-body{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+    .drawer-item{width:100%;border:1px solid #eef0f2;background:#fff;border-radius:18px;padding:13px 14px;font-weight:900;color:#111;text-align:right;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;transition:.18s}
+    .drawer-item:hover{background:#f8fafc;transform:translateX(-2px)}
+    .drawer-item.admin{background:#111;color:#fff;border-color:#111}.drawer-item .hint{font-size:11px;color:#9ca3af;font-weight:800}.drawer-item.admin .hint{color:#e5e7eb}
+    .drawer-sep{height:1px;background:#eef0f2;margin:7px 2px}.modal{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}.modal.active{display:flex}.modal-card{background:#fff;border-radius:26px;max-width:620px;width:100%;max-height:82vh;overflow:auto;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #eef0f2;padding-bottom:12px;margin-bottom:14px}.modal-title{font-size:18px;font-weight:900}.modal-close{border:0;background:#f3f4f6;border-radius:14px;width:40px;height:40px;font-weight:900;cursor:pointer}
+    .hidden-view{display:none!important}
   </style>
 </head>
 <body>
@@ -62,6 +77,9 @@
   <header class="header">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
+        <button class="menu-btn" onclick="openDrawer()" aria-label="فتح القائمة الجانبية">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
         <div id="brandLogo" class="brand-logo">T</div>
         <div class="min-w-0">
           <div id="brandName" class="font-black text-lg truncate">Tofan Store</div>
@@ -69,25 +87,33 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-light !py-2 !px-3" onclick="scrollToHome()">الأقسام</button>
+        <button class="btn btn-light !py-2 !px-3" onclick="showHome()">الرئيسية</button>
         <button class="btn btn-dark !py-2 !px-3" onclick="location.href='login.html'">دخول</button>
       </div>
     </div>
   </header>
 
-  <section id="hero" class="hero">
-    <div class="hero-inner">
-      <div id="seasonText" class="season">مجموعة الموسم الجديد</div>
-      <h1 id="heroTitle" class="hero-title">أناقة بلا حدود.<br>راحة بلا تنازلات.</h1>
-      <p id="heroSubtitle" class="hero-subtitle">اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال</p>
-      <div class="hero-actions">
-        <button class="hero-choice dark" onclick="jumpToSection('sports')">ملابس رياضية</button>
-        <button class="hero-choice light" onclick="jumpToSection('casual')">ملابس كاجوال</button>
+  <aside id="drawer" class="drawer" aria-label="القائمة الجانبية">
+    <div class="drawer-head">
+      <div>
+        <div id="drawerTitle" class="drawer-title">Tofan Store</div>
+        <div class="drawer-sub">القائمة الجانبية</div>
       </div>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
+
+  <section id="homeHero" class="home-hero">
+    <div class="hero-frame">
+      <img src="home-hero.jpg" alt="مجموعة الموسم الجديد - ملابس رياضية وملابس كاجوال">
+      <button class="hero-hit sports" onclick="openHomeSection('sports')" aria-label="فتح قسم ملابس رياضية">ملابس رياضية</button>
+      <button class="hero-hit casual" onclick="openHomeSection('casual')" aria-label="فتح قسم ملابس كاجوال">ملابس كاجوال</button>
     </div>
   </section>
 
-  <main id="home" class="container-box">
+  <main id="storeView" class="container-box hidden-view">
     <div id="loadingGrid" class="products-grid">
       <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
     </div>
@@ -104,6 +130,16 @@
     <div id="footerName">Tofan Store</div>
   </footer>
 
+  <div id="popupModal" class="modal" onclick="closePopup(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div id="popupTitle" class="modal-title">-</div>
+        <button class="modal-close" onclick="closePopup()">✕</button>
+      </div>
+      <div id="popupContent"></div>
+    </div>
+  </div>
+
   <script>
     firebase.initializeApp(firebaseConfig1885);
     const rtdb = firebase.database();
@@ -113,20 +149,23 @@
       banners: FIREBASE_PATHS_1885.settingsBanners,
       categories: FIREBASE_PATHS_1885.categories,
       products: FIREBASE_PATHS_1885.products,
-      socialLinks: "settings1885/socialLinks1885"
+      socialLinks: "settings1885/socialLinks1885",
+      menuItems: "settings1885/sidebarMenu1885"
     };
     const LOCAL_KEYS = {
       cart: STORAGE_KEYS_1885.cart,
       checkoutSelection: STORAGE_KEYS_1885.checkoutSelection,
-      selectedHomeSection: STORAGE_KEYS_1885.selectedHomeSection
+      selectedHomeSection: STORAGE_KEYS_1885.selectedHomeSection || "tofan_selected_home_section_1885"
     };
     const HOME_SECTIONS = [
       { key:"sports", nameAr:"ملابس رياضية", nameEn:"Sportswear", desc:"منتجات مريحة وعملية للتمرين واليوم النشيط" },
       { key:"casual", nameAr:"ملابس كاجوال", nameEn:"Casual Wear", desc:"قطع يومية أنيقة ومريحة لكل الأوقات" }
     ];
 
-    let store = {}, banners = {}, categories = [], products = [], socialLinks = [];
+    let store = {}, banners = {}, categories = [], products = [], socialLinks = [], menuItems = [];
     let categoryFilters = { sports:"all", casual:"all" };
+    let currentSection = null;
+    let dataLoaded = false;
 
     function $(id){return document.getElementById(id)}
     function escapeHtml(v){return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
@@ -167,21 +206,49 @@
       })).filter(x => x.enabled).sort((a,b)=>(a.order-b.order)||(b.createdAt-a.createdAt));
     }
     function mapSocial(raw){return Object.entries(raw || {}).map(([id,v])=>({id, platform:String(v.platform||'').toLowerCase(), url:v.url||'', enabled:v.enabled!==false, order:Number(v.order||0)})).filter(x=>x.enabled).sort((a,b)=>a.order-b.order)}
+    function mapMenu(raw){return Object.entries(raw || {}).map(([id,v])=>({id, titleAr:v.titleAr || v.title || '', titleEn:v.titleEn || '', type:v.type || 'link', value:v.value || '', popupHtml:v.popupHtml || '', enabled:v.enabled !== false, order:Number(v.order || 0)})).filter(x=>x.enabled && x.titleAr).sort((a,b)=>a.order-b.order)}
 
     function applyStore(){
       const name = store.storeNameAr || store.storeName || 'Tofan Store';
       $('brandName').textContent = name;
+      $('drawerTitle').textContent = name;
       $('footerName').textContent = name;
       $('brandDesc').textContent = store.storeDescAr || 'مجموعة الموسم الجديد';
-      $('seasonText').textContent = store.heroKickerAr || 'مجموعة الموسم الجديد';
-      $('heroTitle').innerHTML = (store.heroTitleAr || 'أناقة بلا حدود.<br>راحة بلا تنازلات.');
-      $('heroSubtitle').textContent = store.heroSubtitleAr || store.storeDescAr || 'اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال';
-      if(store.storeLogoUrl){$('brandLogo').innerHTML = `<img src="${escapeHtml(store.storeLogoUrl)}" class="w-full h-full object-cover rounded-[18px]" alt="">`}
-      const heroBg = banners.topBannerUrl || store.topBannerUrl || store.storeTopBannerUrl || '';
-      if(heroBg){$('hero').style.setProperty('--hero-bg', `url('${heroBg.replaceAll("'", "%27")}')`)}
+      if(store.storeLogoUrl){$('brandLogo').innerHTML = `<img src="${escapeHtml(store.storeLogoUrl)}" class="w-full h-full object-cover" alt="">`}
       const wa = normalizeWhatsapp(store.storeWhatsappNumber || store.whatsappNumber || store.whatsapp || (socialLinks.find(x => x.platform === 'whatsapp')?.url || ''));
       if(wa){$('whatsappFloat').href = wa; $('whatsappFloat').style.display = 'flex'}
     }
+
+    function renderDrawer(){
+      const dynamic = menuItems.map(m => `<button class="drawer-item" onclick="handleMenuItem('${m.id}')"><span>${escapeHtml(m.titleAr || m.titleEn)}</span><span class="hint">›</span></button>`).join('');
+      $('drawerBody').innerHTML = `
+        <button class="drawer-item" onclick="showHome(); closeDrawer();"><span>الرئيسية</span><span class="hint">واجهة الأقسام</span></button>
+        <button class="drawer-item" onclick="openHomeSection('sports'); closeDrawer();"><span>ملابس رياضية</span><span class="hint">قسم</span></button>
+        <button class="drawer-item" onclick="openHomeSection('casual'); closeDrawer();"><span>ملابس كاجوال</span><span class="hint">قسم</span></button>
+        <div class="drawer-sep"></div>
+        ${dynamic}
+        ${dynamic ? '<div class="drawer-sep"></div>' : ''}
+        <button class="drawer-item" onclick="location.href='order.html'"><span>متابعة الطلبات</span><span class="hint">طلباتي</span></button>
+        <button class="drawer-item" onclick="location.href='login.html'"><span>تسجيل الدخول</span><span class="hint">حسابي</span></button>
+        <button class="drawer-item admin" onclick="location.href='admin.html'"><span>إعدادات الأدمن</span><span class="hint">لوحة التحكم</span></button>
+      `;
+    }
+    function openDrawer(){$('drawer').classList.add('active');$('drawerBackdrop').classList.add('active');document.body.classList.add('drawer-open')}
+    function closeDrawer(){$('drawer').classList.remove('active');$('drawerBackdrop').classList.remove('active');document.body.classList.remove('drawer-open')}
+    function handleMenuItem(id){
+      const item = menuItems.find(x => x.id === id);
+      if(!item) return;
+      closeDrawer();
+      if(item.type === 'popup_html') return openPopup(item.titleAr || item.titleEn, item.popupHtml || '');
+      if(item.type === 'category'){
+        const cat = categories.find(c => c.id === item.value);
+        if(cat){ openHomeSection(cat.homeSection || 'sports', cat.id); return; }
+        toast('القسم غير متاح'); return;
+      }
+      if(item.value){ location.href = item.value; }
+    }
+    function openPopup(title, html){$('popupTitle').textContent = title || '-';$('popupContent').innerHTML = html || '';$('popupModal').classList.add('active')}
+    function closePopup(e){if(e && e.target !== $('popupModal')) return;$('popupModal').classList.remove('active')}
 
     function renderSection(key){
       const info = sectionInfo(key);
@@ -233,15 +300,31 @@
       </section>`;
     }
 
-    function renderAll(){
+    function renderCurrentSection(){
       $('loadingGrid').classList.add('hidden');
       $('sectionsWrap').classList.remove('hidden');
-      $('sectionsWrap').innerHTML = HOME_SECTIONS.map(x => renderSection(x.key)).join('');
+      if(!currentSection){$('sectionsWrap').innerHTML = ''; return;}
+      $('sectionsWrap').innerHTML = renderSection(currentSection);
       updateCartCount();
     }
-    function setCategoryFilter(section, categoryId){categoryFilters[section]=categoryId; renderAll(); document.getElementById(`section-${section}`)?.scrollIntoView({behavior:'smooth', block:'start'})}
-    function jumpToSection(section){try{sessionStorage.setItem(LOCAL_KEYS.selectedHomeSection, section)}catch(e){} document.getElementById(`section-${section}`)?.scrollIntoView({behavior:'smooth', block:'start'})}
-    function scrollToHome(){document.getElementById('home')?.scrollIntoView({behavior:'smooth', block:'start'})}
+    function setCategoryFilter(section, categoryId){categoryFilters[section]=categoryId; currentSection=section; renderCurrentSection(); document.getElementById(`section-${section}`)?.scrollIntoView({behavior:'smooth', block:'start'})}
+    function openHomeSection(section, categoryId='all'){
+      currentSection = section;
+      categoryFilters[section] = categoryId || 'all';
+      try{sessionStorage.setItem(LOCAL_KEYS.selectedHomeSection, section)}catch(e){}
+      $('homeHero').classList.add('hidden-view');
+      $('storeView').classList.remove('hidden-view');
+      $('cartFloat').style.display = 'flex';
+      if(dataLoaded) renderCurrentSection();
+      setTimeout(()=>window.scrollTo({top:0, behavior:'smooth'}), 20);
+    }
+    function showHome(){
+      currentSection = null;
+      $('storeView').classList.add('hidden-view');
+      $('homeHero').classList.remove('hidden-view');
+      $('cartFloat').style.display = 'none';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
 
     function checkout(items, source='buy_now'){
       const clean = items.map(item => ({id:item.id, qty:Math.max(1,Number(item.qty||1)), nameAr:item.nameAr||'', nameEn:item.nameEn||'', price:Number(item.price||0), image1:item.image1||'', image2:item.image2||''}));
@@ -255,19 +338,24 @@
     async function loadAll(){
       setLoading(true);
       try{
-        const [storeSnap,bannersSnap,catsSnap,productsSnap,socialSnap] = await Promise.all([
-          rtdb.ref(PATHS.store).get(), rtdb.ref(PATHS.banners).get(), rtdb.ref(PATHS.categories).get(), rtdb.ref(PATHS.products).get(), rtdb.ref(PATHS.socialLinks).get()
+        const [storeSnap,bannersSnap,catsSnap,productsSnap,socialSnap,menuSnap] = await Promise.all([
+          rtdb.ref(PATHS.store).get(), rtdb.ref(PATHS.banners).get(), rtdb.ref(PATHS.categories).get(), rtdb.ref(PATHS.products).get(), rtdb.ref(PATHS.socialLinks).get(), rtdb.ref(PATHS.menuItems).get()
         ]);
         store = storeSnap.val() || {};
         banners = bannersSnap.val() || {};
         categories = mapCategories(catsSnap.val() || {});
         products = mapProducts(productsSnap.val() || {});
         socialLinks = mapSocial(socialSnap.val() || {});
+        menuItems = mapMenu(menuSnap.val() || {});
+        dataLoaded = true;
         applyStore();
-        renderAll();
+        renderDrawer();
+        if(currentSection) renderCurrentSection();
+        updateCartCount();
       }catch(e){
         console.error(e);
         $('loadingGrid').innerHTML = `<div class="empty col-span-full">تعذر تحميل بيانات المتجر. تأكد من إعدادات Firebase.</div>`;
+        renderDrawer();
       }finally{
         setLoading(false);
       }
