@@ -286,6 +286,8 @@
       "productDescEn",
       "productPrice",
       "productOldPrice",
+      "productCouponCode",
+      "productCouponDiscount",
       "productImage1",
       "productImage2",
       "productExtraImages",
@@ -298,6 +300,7 @@
       if (el) el.value = "";
     });
 
+    if (byId("productCouponEnabled")) byId("productCouponEnabled").value = "false";
     if (byId("productFreeShipping")) byId("productFreeShipping").value = "false";
     if (byId("productEnableCod")) byId("productEnableCod").value = "true";
     if (byId("productEnableShipping")) byId("productEnableShipping").value = "true";
@@ -337,6 +340,9 @@
       descEn: safeStr(byId("productDescEn")?.value),
       price: Number(byId("productPrice")?.value || 0),
       oldPrice: Number(byId("productOldPrice")?.value || 0),
+      couponCode: safeStr(byId("productCouponCode")?.value).toUpperCase(),
+      couponDiscountAmount: Number(byId("productCouponDiscount")?.value || 0),
+      couponEnabled: byId("productCouponEnabled")?.value === "true",
       image1: safeStr(byId("productImage1")?.value),
       image2: safeStr(byId("productImage2")?.value),
       images: (typeof collectProductSliderImages === "function" ? collectProductSliderImages(true) : safeStr(byId("productExtraImages")?.value)
@@ -360,6 +366,10 @@
     }
     if (!payload.nameAr) {
       safeToast("أدخل اسم المنتج بالعربي");
+      return;
+    }
+    if (payload.couponEnabled && (!payload.couponCode || payload.couponDiscountAmount <= 0)) {
+      safeToast("أدخل كود الخصم وقيمة الخصم أو عطّل الكود");
       return;
     }
     if (!payload.image1) {
@@ -400,6 +410,9 @@
     if (byId("productDescEn")) byId("productDescEn").value = p.descEn || "";
     if (byId("productPrice")) byId("productPrice").value = p.price || 0;
     if (byId("productOldPrice")) byId("productOldPrice").value = p.oldPrice || 0;
+    if (byId("productCouponCode")) byId("productCouponCode").value = p.couponCode || "";
+    if (byId("productCouponDiscount")) byId("productCouponDiscount").value = p.couponDiscountAmount || 0;
+    if (byId("productCouponEnabled")) byId("productCouponEnabled").value = p.couponEnabled ? "true" : "false";
     if (byId("productImage1")) byId("productImage1").value = p.image1 || "";
     if (byId("productImage2")) byId("productImage2").value = p.image2 || "";
     if (typeof fillProductSliderImages === "function") fillProductSliderImages(asArray(p.images));
@@ -505,7 +518,8 @@
             <div class="text-xs text-gray-400 font-bold mt-1">
               ${p.freeShipping ? "شحن مجاني" : `شحن: ${safeMoney(p.shippingFee)}`} |
               ${p.enableShipping ? "توصيل مفعل" : "توصيل معطل"} |
-              ${p.enableCod ? "COD مفعل" : "COD معطل"}
+              ${p.enableCod ? "COD مفعل" : "COD معطل"} |
+              ${p.couponEnabled ? `كود خصم: ${safeEscape(p.couponCode || "-")} (${safeMoney(p.couponDiscountAmount || 0)})` : "بدون كود خصم"}
             </div>
 
             <div class="mt-2 flex flex-wrap items-center gap-3">${colorsHtml}</div>
@@ -695,19 +709,60 @@
     clearPaymentBuilders();
 
     addPaymentCopyFieldBuilder({
-      labelAr: "رقم المحفظة",
-      labelEn: "Wallet Number",
-      value: "123456789"
+      labelAr: "رقم الحساب / المحفظة",
+      labelEn: "Account / Wallet Number",
+      value: "أدخل الرقم من لوحة التحكم"
     });
 
     addPaymentPayerFieldBuilder({
-      labelAr: "اسم المرسل",
-      labelEn: "Sender Name",
-      placeholderAr: "اكتب اسم المرسل",
-      placeholderEn: "Enter sender name",
+      labelAr: "اسم الحساب الذي تم التحويل منه",
+      labelEn: "Sender account name",
+      placeholderAr: "اكتب اسم الحساب الذي حولت منه",
+      placeholderEn: "Enter the sender account name",
       required: true
     });
 
+    addPaymentPayerFieldBuilder({
+      labelAr: "ملاحظة",
+      labelEn: "Note",
+      placeholderAr: "اكتب أي ملاحظة للطلب",
+      placeholderEn: "Write any order note",
+      required: false
+    });
+
+    renderPaymentPreview();
+  };
+
+  window.applyPaymentTemplate = function applyPaymentTemplate(type) {
+    resetPaymentForm();
+    clearPaymentBuilders();
+
+    if (type === "bank") {
+      if (byId("paymentNameAr")) byId("paymentNameAr").value = "بنك فلسطين";
+      if (byId("paymentNameEn")) byId("paymentNameEn").value = "Bank of Palestine";
+      addPaymentCopyFieldBuilder({ labelAr: "رقم الحساب", labelEn: "Account Number", value: "ضع رقم الحساب هنا" });
+      addPaymentCopyFieldBuilder({ labelAr: "اسم المستفيد", labelEn: "Beneficiary Name", value: "ضع اسم المستفيد هنا" });
+    } else {
+      if (byId("paymentNameAr")) byId("paymentNameAr").value = "جوال باي";
+      if (byId("paymentNameEn")) byId("paymentNameEn").value = "Jawwal Pay";
+      addPaymentCopyFieldBuilder({ labelAr: "رقم جوال باي", labelEn: "Jawwal Pay Number", value: "ضع رقم جوال باي هنا" });
+      addPaymentExtraImageBuilder({ labelAr: "QR الدفع", labelEn: "Payment QR", url: "" });
+    }
+
+    addPaymentPayerFieldBuilder({
+      labelAr: "اسم الحساب الذي تم التحويل منه",
+      labelEn: "Sender account name",
+      placeholderAr: "اكتب اسم الحساب الذي حولت منه",
+      placeholderEn: "Enter the sender account name",
+      required: true
+    });
+    addPaymentPayerFieldBuilder({
+      labelAr: "ملاحظة",
+      labelEn: "Note",
+      placeholderAr: "اكتب أي ملاحظة للطلب",
+      placeholderEn: "Write any order note",
+      required: false
+    });
     renderPaymentPreview();
   };
 
@@ -1007,6 +1062,7 @@
               <div class="font-black text-sm">${safeEscape(product.nameAr || product.nameEn || product.name || "منتج")}</div>
               <div class="text-xs text-gray-400 font-bold mt-1">العدد: ${Number(product.qty || product.quantity || 1)}</div>
               <div class="text-sm text-[#14454d] font-black mt-1">${safeMoney(Number(product.price || 0) * Number(product.qty || product.quantity || 1))}</div>
+              ${Number(product.couponDiscount || 0) > 0 ? `<div class="text-xs text-emerald-600 font-black mt-1">خصم المنتج: ${safeMoney(product.couponDiscount)} | الكود: ${safeEscape(product.couponCode || "-")}</div>` : ``}
             </div>
           </div>
 
@@ -1053,6 +1109,8 @@
       const shippingDisplay = order.shippingZone?.displayPrice || order.pricing?.displayShipping || order.displayShipping || safeMoney(order.pricing?.shippingTotal || 0);
       const subtotalDisplay = order.pricing?.displaySubtotal || order.displaySubtotal || order.pricing?.displayProductsTotal || safeMoney(order.pricing?.subtotal || 0);
       const totalDisplay = order.pricing?.displayTotal || order.displayAmount || order.pricing?.displayGrandTotal || safeMoney(order.pricing?.total || order.amountIls || 0);
+      const discountDisplay = order.pricing?.displayDiscount || safeMoney(order.pricing?.discountTotal || 0);
+      const couponCodeDisplay = order.pricing?.couponCode || "-";
       const checkoutFields = order.checkoutFields || {};
       const checkoutLabels = order.checkoutFieldLabels || {};
       const payerFields = order.paymentSubmission?.payerFields || {};
@@ -1084,6 +1142,8 @@
                 ${renderOrderFieldBox("منطقة التوصيل", shippingZoneName)}
                 ${renderOrderFieldBox("سعر التوصيل", shippingDisplay)}
                 ${renderOrderFieldBox("المبلغ الفرعي", subtotalDisplay)}
+                ${renderOrderFieldBox("كود الخصم", couponCodeDisplay)}
+                ${renderOrderFieldBox("قيمة الخصم", discountDisplay)}
                 ${renderOrderFieldBox("الإجمالي", totalDisplay)}
               </div>
 
@@ -1145,14 +1205,14 @@
       result.__backupMeta = {
         createdAt: Date.now(),
         createdAtText: new Date().toLocaleString(),
-        source: "Tofan Store Admin Backup"
+        source: "Store Admin Backup"
       };
 
       const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `tofan-store-backup-${Date.now()}.json`;
+      a.download = `store83c80-backup-${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();

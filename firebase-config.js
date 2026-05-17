@@ -1,34 +1,33 @@
 // firebase-config.js
-// تم تحديث بيانات Firebase حسب المعلومات الجديدة.
+// بيانات Firebase الجديدة للمشروع store-83c80.
+// ملاحظة: هذا القالب يستخدم Firebase Compat SDK داخل صفحات HTML، لذلك تم إبقاء نفس أسماء المتغيرات حتى تعمل كل الملفات بدون تحويل بناء.
 
-const firebaseConfig1885 = {
-  apiKey: "AIzaSyCHg8UZV5iJh3O9fog4iSkrsQi4STugcrs",
-  authDomain: "kaood-6f44d.firebaseapp.com",
-  databaseURL: "https://kaood-6f44d-default-rtdb.firebaseio.com",
-  projectId: "kaood-6f44d",
-  storageBucket: "kaood-6f44d.firebasestorage.app",
-  messagingSenderId: "374769332160",
-  appId: "1:374769332160:web:914adfe7c9daff7518a225",
-  measurementId: "G-4KBHRH8L57"
+const firebaseConfig5546 = {
+  apiKey: "AIzaSyBpeOio-N9LcsnygjabNV-exSXAOKmcIcM",
+  authDomain: "store-83c80.firebaseapp.com",
+  databaseURL: "https://store-83c80-default-rtdb.firebaseio.com",
+  projectId: "store-83c80",
+  storageBucket: "store-83c80.firebasestorage.app",
+  messagingSenderId: "1088616471612",
+  appId: "1:1088616471612:web:953d6d46be70c21b447739",
+  measurementId: "G-3M0GDB0QMR"
 };
 
-// Alias عادي لو احتجته في أي ملف إضافي.
-const firebaseConfig = firebaseConfig1885;
+const firebaseConfig = firebaseConfig5546;
 
-const FIREBASE_PATHS_1885 = {
-  settingsStore: "settings1885/store1885",
-  settingsBanners: "settings1885/banners1885",
-  settingsPaymentMethods: "settings1885/paymentMethods1885",
-  categories: "categories1885",
-  products: "products1885",
-  users: "users1885",
-  orders: "orders1885"
+const FIREBASE_PATHS_5546 = {
+  settingsStore: "settings83c80/store83c80",
+  settingsBanners: "settings83c80/banners83c80",
+  settingsPaymentMethods: "settings83c80/paymentMethods83c80",
+  categories: "categories83c80",
+  products: "products83c80",
+  users: "users83c80",
+  orders: "orders83c80"
 };
 
-const STORAGE_KEYS_1885 = {
-  cart: "tofan_cart_1885",
-  wishlist: "tofan_wishlist_1885",
-  checkoutSelection: "tofan_checkout_selection_1885",
-  selectedCategory: "tofan_selected_category_1885",
-  selectedHomeSection: "tofan_selected_home_section_1885"
+const STORAGE_KEYS_5546 = {
+  cart: "store83c80_cart",
+  wishlist: "store83c80_wishlist",
+  checkoutSelection: "store83c80_checkout_selection",
+  selectedCategory: "store83c80_selected_category"
 };

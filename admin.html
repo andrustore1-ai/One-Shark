@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel | Tofan Store</title>
+  <title>Admin Panel | المتجر</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -226,6 +226,23 @@
     .status-approved{background:#dbeafe;color:#1d4ed8}
     .status-delivered{background:#dcfce7;color:#166534}
     .status-rejected{background:#fee2e2;color:#b91c1c}
+    .section-settings-panel{
+      border:1px solid #e5e7eb;
+      border-radius:24px;
+      background:linear-gradient(180deg,#ffffff,#f8fafc);
+      padding:18px;
+      box-shadow:0 12px 30px rgba(15,23,42,.05);
+    }
+    .section-settings-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:900;
+      color:#14454d;
+      margin-bottom:14px;
+      font-size:18px;
+    }
+    .section-settings-title svg{width:24px;height:24px;color:#f37021}
     .code-box{
       background:#111827;
       color:#fff;
@@ -438,7 +455,7 @@
 
       <div class="mb-4">
         <label class="label">البريد الجديد</label>
-        <input id="forceNewEmail" type="email" class="field" placeholder="new-admin@email.com">
+        <input id="forceNewEmail" type="email" class="field" placeholder="اكتب البريد الإلكتروني الجديد">
       </div>
 
       <div class="mb-4">
@@ -477,12 +494,12 @@
 
       <div class="mb-4">
         <label class="label">البريد الإلكتروني</label>
-        <input id="adminEmail" type="email" class="field" value="fayyatfade@gmail.com" placeholder="admin@email.com">
+        <input id="adminEmail" type="email" class="field" autocomplete="username" placeholder="اكتب البريد الإلكتروني">
       </div>
 
       <div class="mb-5">
         <label class="label">كلمة المرور</label>
-        <input id="adminPassword" type="password" class="field" value="00000" placeholder="00000">
+        <input id="adminPassword" type="password" class="field" autocomplete="current-password" placeholder="اكتب كلمة المرور">
       </div>
 
       <button class="btn btn-primary w-full" onclick="adminLogin()">دخول الأدمن</button>
@@ -543,27 +560,27 @@
 
           <div class="mb-4">
             <label class="label">البريد الحالي</label>
-            <input id="adminCurrentEmail" type="email" class="field" placeholder="البريد الحالي">
+            <input id="adminCurrentEmail" type="email" class="field" placeholder="اكتب البريد الحالي">
           </div>
 
           <div class="mb-4">
             <label class="label">البريد الجديد</label>
-            <input id="adminNewEmail" type="email" class="field" placeholder="البريد الجديد">
+            <input id="adminNewEmail" type="email" class="field" placeholder="اكتب البريد الجديد">
           </div>
 
           <div class="mb-4">
             <label class="label">كلمة المرور الحالية</label>
-            <input id="adminCurrentPassword" type="password" class="field" placeholder="كلمة المرور الحالية">
+            <input id="adminCurrentPassword" type="password" class="field" placeholder="اكتب كلمة المرور الحالية">
           </div>
 
           <div class="mb-4">
             <label class="label">كلمة المرور الجديدة</label>
-            <input id="adminNewPassword" type="password" class="field" placeholder="كلمة المرور الجديدة">
+            <input id="adminNewPassword" type="password" class="field" placeholder="اكتب كلمة المرور الجديدة">
           </div>
 
           <div class="mb-5">
             <label class="label">تأكيد كلمة المرور الجديدة</label>
-            <input id="adminConfirmPassword" type="password" class="field" placeholder="تأكيد كلمة المرور">
+            <input id="adminConfirmPassword" type="password" class="field" placeholder="أعد كتابة كلمة المرور الجديدة">
           </div>
 
           <button class="btn btn-primary" onclick="updateAdminCredentials()">حفظ بيانات الأدمن</button>
@@ -581,6 +598,26 @@
             <div><label class="label">وصف المتجر بالإنجليزي</label><textarea id="storeDescEn" class="field min-h-[110px]" placeholder="Short store description"></textarea></div>
             <div><label class="label">رابط الشعار</label><input id="storeLogoUrl" class="field" placeholder="https://example.com/logo.png"></div>
             <div><label class="label">رابط البانر الرئيسي</label><input id="storeTopBannerUrl" class="field" placeholder="https://example.com/banner.jpg"></div>
+            <div><label class="label">رابط صورة واجهة الاختيار</label><input id="homeHeroImageUrl" class="field" placeholder="https://example.com/hero.jpg"></div>
+            <div><label class="label">جملة صغيرة فوق عنوان الواجهة</label><input id="homeKickerAr" class="field" placeholder="مجموعة الموسم الجديد"></div>
+            <div><label class="label">عنوان واجهة الاختيار بالعربي</label><textarea id="homeTitleAr" class="field min-h-[90px]" placeholder="أناقة بلا حدود.&#10;راحة بلا تنازلات."></textarea></div>
+            <div><label class="label">وصف واجهة الاختيار بالعربي</label><input id="homeSubtitleAr" class="field" placeholder="اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال"></div>
+            <div><label class="label">Home kicker English</label><input id="homeKickerEn" class="field" placeholder="New Season Collection"></div>
+            <div><label class="label">Home title English</label><textarea id="homeTitleEn" class="field min-h-[90px]" placeholder="Limitless Style.&#10;No-Compromise Comfort."></textarea></div>
+            <div><label class="label">Home subtitle English</label><input id="homeSubtitleEn" class="field" placeholder="Explore our exclusive sportswear and casual wear collection"></div>
+            <div>
+              <label class="label">تفعيل شريط الإعلان</label>
+              <select id="announcementEnabled" class="field"><option value="true">مفعل</option><option value="false">معطل</option></select>
+              <div class="hint">مثال: اطلب 3 بلايز وتوصيل مجاني.</div>
+            </div>
+            <div><label class="label">نص شريط الإعلان بالعربي</label><input id="announcementTextAr" class="field" placeholder="اطلب 3 بلايز وتوصيل مجاني"></div>
+            <div><label class="label">Announcement text English</label><input id="announcementTextEn" class="field" placeholder="Order 3 shirts and get free delivery"></div>
+            <div><label class="label">سياسة التبديل بالعربي</label><textarea id="exchangePolicyAr" class="field min-h-[120px]" placeholder="سياسة تبديل خلال 24 ساعة... "></textarea></div>
+            <div><label class="label">Exchange policy English</label><textarea id="exchangePolicyEn" class="field min-h-[120px]" placeholder="Exchange within 24 hours..."></textarea></div>
+            <div><label class="label">بطاقات المزايا بالعربي</label><textarea id="trustCardsAr" class="field min-h-[130px]" placeholder="شحن مجاني|عند شراء 3 قطع&#10;شحن سريع|خلال 24-48 ساعة&#10;استبدال خلال 24 ساعة|وفقًا لسياسة المتجر&#10;دفع آمن|بنك فلسطين - جوال باي"></textarea><div class="hint">كل سطر بطاقة. اكتب: العنوان|الوصف</div></div>
+            <div><label class="label">Trust cards English</label><textarea id="trustCardsEn" class="field min-h-[130px]" placeholder="Free delivery|When buying 3 pieces&#10;Fast shipping|Within 24-48 hours&#10;24h exchange|According to store policy&#10;Secure payment|Bank of Palestine - Jawwal Pay"></textarea><div class="hint">Each line: title|description</div></div>
+            <div class="md:col-span-2"><label class="label">آراء العملاء بالعربي</label><textarea id="customerReviewsAr" class="field min-h-[150px]" placeholder="رهف|المقاس طلع مزبوط والقماش مريح كثير.|5&#10;سارة|الطلب وصل بسرعة والتغليف كان مرتب.|5"></textarea><div class="hint">كل سطر رأي. الصيغة: الاسم|نص الرأي|التقييم من 1 إلى 5. لن تظهر الآراء في المتجر إلا إذا أضفتها هنا وحُفظت في Firebase.</div></div>
+            <div class="md:col-span-2"><label class="label">Customer reviews English</label><textarea id="customerReviewsEn" class="field min-h-[150px]" placeholder="Sarah|Fast delivery and neat packaging.|5&#10;Daniel|Great quality and comfortable fabric.|5"></textarea><div class="hint">Each line: name|review text|rating 1-5.</div></div>
             <div>
               <label class="label">تفعيل الدفع عند الاستلام عالميًا</label>
               <select id="enableCodGlobal" class="field">
@@ -604,6 +641,43 @@
             <div>
               <label class="label">رسالة واتساب الافتراضية</label>
               <input id="storeWhatsappMessage" class="field" placeholder="مرحباً، أريد الاستفسار عن المنتجات">
+            </div>
+          </div>
+
+
+          <div class="mt-6 grid-auto">
+            <div class="section-settings-panel md:col-span-2">
+              <div class="section-settings-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M13 2 5 13h6l-1 9 9-13h-6l1-7z"/></svg> إعدادات قسم ملابس رياضية</div>
+              <div class="grid-auto">
+                <div><label class="label">بانر القسم الرئيسي</label><input id="sectionSportsTopBannerUrl" class="field" placeholder="رابط بانر ملابس رياضية"></div>
+                <div><label class="label">صورة خلفية واجهة الاختيار</label><input id="sectionSportsHomeHeroImageUrl" class="field" placeholder="رابط صورة خلفية الرياضة"></div>
+                <div><label class="label">جملة صغيرة</label><input id="sectionSportsHomeKickerAr" class="field" placeholder="مجموعة الرياضة الجديدة"></div>
+                <div><label class="label">عنوان القسم</label><textarea id="sectionSportsHomeTitleAr" class="field min-h-[90px]" placeholder="أداء أقوى.&#10;ستايل أريح."></textarea></div>
+                <div><label class="label">وصف القسم</label><input id="sectionSportsHomeSubtitleAr" class="field" placeholder="كل ما يخص الملابس الرياضية"></div>
+                <div><label class="label">تفعيل شريط إعلان القسم</label><select id="sectionSportsAnnouncementEnabled" class="field"><option value="inherit">حسب العام</option><option value="true">مفعل</option><option value="false">معطل</option></select></div>
+                <div><label class="label">نص إعلان القسم</label><input id="sectionSportsAnnouncementTextAr" class="field" placeholder="عرض خاص لقسم الرياضة"></div>
+                <div><label class="label">سياسة التبديل للقسم</label><textarea id="sectionSportsExchangePolicyAr" class="field min-h-[110px]" placeholder="سياسة تبديل خاصة بقسم الرياضة"></textarea></div>
+                <div><label class="label">بطاقات مزايا القسم</label><textarea id="sectionSportsTrustCardsAr" class="field min-h-[120px]" placeholder="شحن سريع|خلال 24 ساعة&#10;استبدال|حسب السياسة"></textarea></div>
+                <div><label class="label">آراء العملاء للقسم</label><textarea id="sectionSportsCustomerReviewsAr" class="field min-h-[120px]" placeholder="أحمد|جودة ممتازة.|5"></textarea></div>
+                <div><label class="label">الدفع عند الاستلام للقسم</label><select id="sectionSportsEnableCodGlobal" class="field"><option value="inherit">حسب العام</option><option value="true">مفعل</option><option value="false">معطل</option></select></div>
+              </div>
+            </div>
+
+            <div class="section-settings-panel md:col-span-2">
+              <div class="section-settings-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7.5 9 4l6 3.5 5-1.5v11l-5 3-6-3-5 1.5v-11zM9 4v13M15 7.5V20"/></svg> إعدادات قسم ملابس كاجوال</div>
+              <div class="grid-auto">
+                <div><label class="label">بانر القسم الرئيسي</label><input id="sectionCasualTopBannerUrl" class="field" placeholder="رابط بانر ملابس كاجوال"></div>
+                <div><label class="label">صورة خلفية واجهة الاختيار</label><input id="sectionCasualHomeHeroImageUrl" class="field" placeholder="رابط صورة خلفية الكاجوال"></div>
+                <div><label class="label">جملة صغيرة</label><input id="sectionCasualHomeKickerAr" class="field" placeholder="مجموعة الكاجوال الجديدة"></div>
+                <div><label class="label">عنوان القسم</label><textarea id="sectionCasualHomeTitleAr" class="field min-h-[90px]" placeholder="ستايل يومي.&#10;تفاصيل راقية."></textarea></div>
+                <div><label class="label">وصف القسم</label><input id="sectionCasualHomeSubtitleAr" class="field" placeholder="كل ما يخص الملابس الكاجوال"></div>
+                <div><label class="label">تفعيل شريط إعلان القسم</label><select id="sectionCasualAnnouncementEnabled" class="field"><option value="inherit">حسب العام</option><option value="true">مفعل</option><option value="false">معطل</option></select></div>
+                <div><label class="label">نص إعلان القسم</label><input id="sectionCasualAnnouncementTextAr" class="field" placeholder="عرض خاص لقسم الكاجوال"></div>
+                <div><label class="label">سياسة التبديل للقسم</label><textarea id="sectionCasualExchangePolicyAr" class="field min-h-[110px]" placeholder="سياسة تبديل خاصة بقسم الكاجوال"></textarea></div>
+                <div><label class="label">بطاقات مزايا القسم</label><textarea id="sectionCasualTrustCardsAr" class="field min-h-[120px]" placeholder="خامة مميزة|تفاصيل يومية أنيقة&#10;استبدال|حسب السياسة"></textarea></div>
+                <div><label class="label">آراء العملاء للقسم</label><textarea id="sectionCasualCustomerReviewsAr" class="field min-h-[120px]" placeholder="سارة|القماش جميل والمقاس مضبوط.|5"></textarea></div>
+                <div><label class="label">الدفع عند الاستلام للقسم</label><select id="sectionCasualEnableCodGlobal" class="field"><option value="inherit">حسب العام</option><option value="true">مفعل</option><option value="false">معطل</option></select></div>
+              </div>
             </div>
           </div>
 
@@ -784,6 +858,12 @@
               <div><label class="label">السعر القديم</label><input id="productOldPrice" type="number" class="field" placeholder="90"></div>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              <div><label class="label">كود خصم المنتج</label><input id="productCouponCode" class="field" placeholder="مثال: TSHIRT10"></div>
+              <div><label class="label">قيمة الخصم بالشيكل</label><input id="productCouponDiscount" type="number" class="field" placeholder="10"></div>
+              <div><label class="label">تفعيل الكود</label><select id="productCouponEnabled" class="field"><option value="false">معطل</option><option value="true">مفعل</option></select></div>
+            </div>
+
             <div class="mb-4"><label class="label">الصورة الأولى</label><input id="productImage1" class="field" placeholder="https://example.com/image-1.jpg"></div>
             <div class="mb-4"><label class="label">الصورة الثانية</label><input id="productImage2" class="field" placeholder="https://example.com/image-2.jpg"></div>
 
@@ -870,6 +950,7 @@
             <input type="hidden" id="sectionEditId">
 
             <div class="mb-4"><label class="label">النوع</label><select id="sectionType" class="field"><option value="banner">بانر</option><option value="slider">سلايدر</option></select></div>
+            <div class="mb-4"><label class="label">القسم الرئيسي</label><select id="sectionHomeSection" class="field"><option value="sports">ملابس رياضية</option><option value="casual">ملابس كاجوال</option></select><div class="hint">سيظهر هذا البانر أو السلايدر داخل القسم المحدد فقط.</div></div>
             <div class="mb-4"><label class="label">العنوان بالعربي</label><input id="sectionTitleAr" class="field" placeholder="عنوان بالعربي"></div>
             <div class="mb-4"><label class="label">العنوان بالإنجليزي</label><input id="sectionTitleEn" class="field" placeholder="Title in English"></div>
             <div class="mb-4">
@@ -991,7 +1072,11 @@
           <div class="card p-5">
             <div class="flex items-center justify-between gap-2 mb-5">
               <h3 class="font-black text-xl text-[#14454d]">إضافة / تعديل طريقة دفع</h3>
-              <button class="btn btn-info" onclick="openPaymentPreviewModal()">معاينة</button>
+              <div class="flex gap-2 flex-wrap">
+                <button class="btn btn-secondary" type="button" onclick="applyPaymentTemplate('bank')">قالب بنك فلسطين</button>
+                <button class="btn btn-secondary" type="button" onclick="applyPaymentTemplate('jawwal')">قالب جوال باي</button>
+                <button class="btn btn-info" onclick="openPaymentPreviewModal()">معاينة</button>
+              </div>
             </div>
 
             <input type="hidden" id="paymentEditId">
@@ -1113,32 +1198,32 @@
   </section>
 
   <script>
-    firebase.initializeApp(firebaseConfig1885);
+    firebase.initializeApp(firebaseConfig5546);
     window.rtdb = firebase.database();
 
-    window.ADMIN_PATHS_1885 = {
-      admin: "settings1885/admin1885",
-      store: FIREBASE_PATHS_1885.settingsStore,
-      banners: FIREBASE_PATHS_1885.settingsBanners,
-      categories: FIREBASE_PATHS_1885.categories,
-      products: FIREBASE_PATHS_1885.products,
-      paymentMethods: FIREBASE_PATHS_1885.settingsPaymentMethods,
-      orders: FIREBASE_PATHS_1885.orders,
-      menuItems: "settings1885/sidebarMenu1885",
-      pageSections: "settings1885/pageSections1885",
-      shippingZones: "settings1885/shippingZones1885",
-      globalCheckoutFields: "settings1885/globalCheckoutFields1885",
-      socialLinks: "settings1885/socialLinks1885"
+    window.ADMIN_PATHS_5546 = {
+      admin: "settings83c80/admin83c80",
+      store: FIREBASE_PATHS_5546.settingsStore,
+      banners: FIREBASE_PATHS_5546.settingsBanners,
+      categories: FIREBASE_PATHS_5546.categories,
+      products: FIREBASE_PATHS_5546.products,
+      paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
+      orders: FIREBASE_PATHS_5546.orders,
+      menuItems: "settings83c80/sidebarMenu83c80",
+      pageSections: "settings83c80/pageSections83c80",
+      shippingZones: "settings83c80/shippingZones83c80",
+      globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
+      socialLinks: "settings83c80/socialLinks83c80"
     };
 
-    window.DEFAULT_ADMIN_1885 = {
-      email: "fayyatfade@gmail.com",
-      password: "00000",
-      mustChange: false,
+    window.DEFAULT_ADMIN_5546 = {
+      email: "oskar@gmail.com",
+      password: "0000",
+      mustChange: true,
       updatedAt: Date.now()
     };
 
-    window.KNOWN_COLORS_1885 = [
+    window.KNOWN_COLORS_5546 = [
       {name:"أحمر", code:"#ff0000"},
       {name:"أزرق", code:"#0000ff"},
       {name:"أخضر", code:"#008000"},
@@ -1157,7 +1242,7 @@
       {name:"بيج", code:"#f5f5dc"}
     ];
 
-    window.CATEGORY_ICONS_1885 = [
+    window.CATEGORY_ICONS_5546 = [
       { key:"shirt", label:"ملابس", svg:`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M8 4l4 2 4-2 4 4-3 2v9a1 1 0 01-1 1H8a1 1 0 01-1-1v-9L4 8l4-4z"/></svg>` },
       { key:"shoe", label:"أحذية", svg:`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 16c2 0 3-1 5-1 2 0 3 2 6 2 3 0 4-1 7-1v3H3v-3zM9 10l2 3"/></svg>` },
       { key:"bag", label:"حقائب", svg:`<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M8 8V7a4 4 0 118 0v1m-9 0h10a1 1 0 011 1l-1 10a1 1 0 01-1 1H8a1 1 0 01-1-1L6 9a1 1 0 011-1z"/></svg>` },

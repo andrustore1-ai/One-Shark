@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tofan Store | الطلبات</title>
+  <title>المتجر | الطلبات</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -458,17 +458,17 @@
   </div>
 
   <script>
-    firebase.initializeApp(firebaseConfig1885);
+    firebase.initializeApp(firebaseConfig5546);
     const rtdb = firebase.database();
     const auth = firebase.auth();
 
     const PATHS = {
-      orders: FIREBASE_PATHS_1885.orders,
-      users: "users1885"
+      orders: FIREBASE_PATHS_5546.orders,
+      users: "users83c80"
     };
 
     const LOCAL_KEYS = {
-      lang: "tofan_lang_1885"
+      lang: "store83c80_lang"
     };
 
     let lang = localStorage.getItem(LOCAL_KEYS.lang) || "ar";
@@ -528,6 +528,8 @@
         "piece":"القطعة",
         "subtotal":"المبلغ الفرعي",
         "shipping-fee":"رسوم التوصيل",
+        "coupon-discount":"الخصم",
+        "coupon-code":"كود الخصم",
         "total":"الإجمالي",
         "pending":"قيد الانتظار",
         "approved":"تمت الموافقة",
@@ -589,6 +591,8 @@
         "piece":"Piece",
         "subtotal":"Subtotal",
         "shipping-fee":"Shipping Fee",
+        "coupon-discount":"Discount",
+        "coupon-code":"Discount Code",
         "total":"Total",
         "pending":"Pending",
         "approved":"Approved",
@@ -700,7 +704,7 @@
     }
 
     function goLoginPage(){
-      sessionStorage.setItem("login_redirect_1885", "order.html");
+      sessionStorage.setItem("login_redirect_83c80", "order.html");
       window.location.href = "login.html";
     }
 
@@ -830,6 +834,9 @@
       const totalText = order.pricing?.displayTotal || order.displayAmount || money(order.pricing?.total || order.amountIls || 0);
       const subtotalText = order.pricing?.displaySubtotal || money(order.pricing?.subtotal || order.subtotalIls || 0);
       const shippingText = order.pricing?.displayShipping || order.shippingZone?.displayPrice || money(order.pricing?.shippingTotal || order.deliveryFeeIls || 0);
+      const discountText = order.pricing?.displayDiscount || money(order.pricing?.discountTotal || 0);
+      const discountTotal = Number(order.pricing?.discountTotal || 0);
+      const couponCode = order.pricing?.couponCode || "";
       const customerName = getSafeCustomerName(order);
       const phone = getSafePhone(order);
       const email = getSafeEmail(order);
@@ -890,6 +897,7 @@
                       <div class="flex-1 min-w-0">
                         <div class="text-sm font-black text-gray-800 line-clamp-2">${escapeHtml(getItemDisplayName(item))}</div>
                         <div class="text-xs text-gray-400 font-bold mt-1">${t("qty")}: ${Number(item.qty || item.quantity || 1)}</div>
+                        ${Number(item.couponDiscount || 0) > 0 ? `<div class="text-xs text-emerald-600 font-black mt-1">${t("coupon-discount")}: ${money(item.couponDiscount)}</div>` : ``}
                         ${renderItemCustomization(item, order)}
                       </div>
                       <div class="text-sm font-black text-[var(--primary)]">${money(Number(item.price || 0) * Number(item.qty || item.quantity || 1))}</div>
@@ -905,6 +913,11 @@
                   <span class="text-gray-500 font-black">${t("subtotal")}</span>
                   <span class="font-black">${escapeHtml(subtotalText)}</span>
                 </div>
+                ${discountTotal > 0 ? `
+                <div class="flex items-center justify-between gap-3 text-sm mb-2">
+                  <span class="text-gray-500 font-black">${t("coupon-discount")}${couponCode ? ` (${escapeHtml(couponCode)})` : ``}</span>
+                  <span class="font-black">-${escapeHtml(discountText)}</span>
+                </div>` : ``}
                 <div class="flex items-center justify-between gap-3 text-sm mb-2">
                   <span class="text-gray-500 font-black">${t("shipping-fee")}</span>
                   <span class="font-black">${escapeHtml(shippingText)}</span>

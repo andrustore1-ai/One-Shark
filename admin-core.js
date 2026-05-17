@@ -1,4 +1,4 @@
-/* admin-core.js - نواة لوحة تحكم متجر طوفان */
+/* admin-core.js - نواة لوحة تحكم المتجر */
 (function(){
   "use strict";
 
@@ -6,27 +6,78 @@
   const asArray = (v) => Array.isArray(v) ? v : [];
   const clean = (v) => String(v ?? "").trim();
 
-  window.PATHS = window.ADMIN_PATHS_1885 || {
-    admin: "settings1885/admin1885",
-    store: FIREBASE_PATHS_1885.settingsStore,
-    banners: FIREBASE_PATHS_1885.settingsBanners,
-    categories: FIREBASE_PATHS_1885.categories,
-    products: FIREBASE_PATHS_1885.products,
-    paymentMethods: FIREBASE_PATHS_1885.settingsPaymentMethods,
-    orders: FIREBASE_PATHS_1885.orders,
-    menuItems: "settings1885/sidebarMenu1885",
-    pageSections: "settings1885/pageSections1885",
-    shippingZones: "settings1885/shippingZones1885",
-    globalCheckoutFields: "settings1885/globalCheckoutFields1885",
-    socialLinks: "settings1885/socialLinks1885"
+  window.PATHS = window.ADMIN_PATHS_5546 || {
+    admin: "settings83c80/admin83c80",
+    store: FIREBASE_PATHS_5546.settingsStore,
+    banners: FIREBASE_PATHS_5546.settingsBanners,
+    categories: FIREBASE_PATHS_5546.categories,
+    products: FIREBASE_PATHS_5546.products,
+    paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
+    orders: FIREBASE_PATHS_5546.orders,
+    menuItems: "settings83c80/sidebarMenu83c80",
+    pageSections: "settings83c80/pageSections83c80",
+    shippingZones: "settings83c80/shippingZones83c80",
+    globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
+    socialLinks: "settings83c80/socialLinks83c80"
   };
-  window.KNOWN_COLORS = window.KNOWN_COLORS_1885 || [];
+  window.KNOWN_COLORS = window.KNOWN_COLORS_5546 || [];
 
-  const ADMIN_SESSION_KEY = "tofan_admin_session_1885";
+  const ADMIN_SESSION_KEY = "store83c80_admin_session";
   const HOME_SECTIONS = [
     { id: "sports", ar: "ملابس رياضية", en: "Sportswear" },
     { id: "casual", ar: "ملابس كاجوال", en: "Casual Wear" }
   ];
+
+  const SECTION_SETTING_DEFS = {
+    sports: { prefix: "sectionSports", ar: "ملابس رياضية" },
+    casual: { prefix: "sectionCasual", ar: "ملابس كاجوال" }
+  };
+  const SECTION_SETTING_TEXT_FIELDS = [
+    "topBannerUrl",
+    "homeHeroImageUrl",
+    "homeKickerAr",
+    "homeTitleAr",
+    "homeSubtitleAr",
+    "announcementTextAr",
+    "exchangePolicyAr",
+    "trustCardsAr",
+    "customerReviewsAr"
+  ];
+  const SECTION_SETTING_SELECT_FIELDS = ["announcementEnabled", "enableCodGlobal"];
+
+  function cap(value){ return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1); }
+  function getSectionInputId(sectionId, field){
+    const prefix = SECTION_SETTING_DEFS[sectionId]?.prefix;
+    return prefix ? `${prefix}${cap(field)}` : "";
+  }
+  function parseInheritedBool(value){
+    if(value === "true") return true;
+    if(value === "false") return false;
+    return undefined;
+  }
+  function fillSectionSettingsForm(sectionId){
+    const settings = ((window.storeCache || {}).sectionSettings || {})[sectionId] || {};
+    SECTION_SETTING_TEXT_FIELDS.forEach(field => {
+      const el = $(getSectionInputId(sectionId, field));
+      if(el) el.value = settings[field] || "";
+    });
+    SECTION_SETTING_SELECT_FIELDS.forEach(field => {
+      const el = $(getSectionInputId(sectionId, field));
+      if(el) el.value = typeof settings[field] === "boolean" ? String(settings[field]) : "inherit";
+    });
+  }
+  function collectSectionSettingsForm(sectionId){
+    const payload = {};
+    SECTION_SETTING_TEXT_FIELDS.forEach(field => {
+      const value = clean($(getSectionInputId(sectionId, field))?.value);
+      if(value) payload[field] = value;
+    });
+    SECTION_SETTING_SELECT_FIELDS.forEach(field => {
+      const parsed = parseInheritedBool($(getSectionInputId(sectionId, field))?.value);
+      if(typeof parsed === "boolean") payload[field] = parsed;
+    });
+    return payload;
+  }
 
   window.escapeHtml = function escapeHtml(value){
     return String(value ?? "")
@@ -128,6 +179,9 @@
       descEn: v.descEn || "",
       price: Number(v.price || 0),
       oldPrice: Number(v.oldPrice || 0),
+      couponCode: v.couponCode || "",
+      couponDiscountAmount: Number(v.couponDiscountAmount || v.couponDiscount || 0),
+      couponEnabled: v.couponEnabled === true,
       image1: v.image1 || v.image || v.front || "",
       image2: v.image2 || v.back || "",
       images: asArray(v.images),
@@ -186,6 +240,7 @@
       titleAr: v.titleAr || v.title || "",
       titleEn: v.titleEn || "",
       placement: v.placement || "after_categories",
+      homeSection: v.homeSection || v.mainSection || "sports",
       link: v.link || "#",
       image: v.image || "",
       images: asArray(v.images),
@@ -221,29 +276,13 @@
     })).sort((a,b) => (a.order - b.order) || (a.createdAt - b.createdAt));
   }
 
-  function getDefaultAdmin(){
-    return window.DEFAULT_ADMIN_1885 || { email:"fayyatfade@gmail.com", password:"00000", mustChange:false, updatedAt:Date.now() };
-  }
-
   async function getAdminData(){
     const snap = await window.rtdb.ref(window.PATHS.admin).get();
     let admin = snap.val();
     if(!admin){
-      admin = getDefaultAdmin();
+      admin = window.DEFAULT_ADMIN_5546 || { email:"oskar@gmail.com", password:"0000", mustChange:true, updatedAt:Date.now() };
       await window.rtdb.ref(window.PATHS.admin).set(admin);
     }
-    return admin;
-  }
-
-  async function resetAdminToDefault(emailOverride){
-    const def = getDefaultAdmin();
-    const admin = {
-      email: clean(emailOverride) || clean(def.email) || "fayyatfade@gmail.com",
-      password: "00000",
-      mustChange: false,
-      updatedAt: Date.now()
-    };
-    await window.rtdb.ref(window.PATHS.admin).set(admin);
     return admin;
   }
 
@@ -257,16 +296,10 @@
     try{
       const email = clean($("adminEmail")?.value);
       const password = clean($("adminPassword")?.value);
-      let admin = await getAdminData();
-      const defaultKey = "00000";
-      const isDefaultKey = password === defaultKey;
-      const isSavedLogin = email === clean(admin.email) && password === clean(admin.password);
-      if(!isSavedLogin && !isDefaultKey){
+      const admin = await getAdminData();
+      if(email !== clean(admin.email) || password !== clean(admin.password)){
         toast("بيانات الأدمن غير صحيحة");
         return;
-      }
-      if(isDefaultKey && !isSavedLogin){
-        admin = await resetAdminToDefault(email || admin.email);
       }
       sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
       if(admin.mustChange === true){
@@ -274,6 +307,8 @@
       }
       setScreen(true);
       await loadAllData();
+      requestOrderNotificationPermission();
+      startOrderNotifications();
       toast("تم تسجيل الدخول");
     }catch(e){
       console.error(e);
@@ -282,6 +317,7 @@
   };
 
   window.logoutAdmin = function logoutAdmin(){
+    stopOrderNotifications();
     sessionStorage.removeItem(ADMIN_SESSION_KEY);
     setScreen(false);
     if($("forceChangeWrap")) $("forceChangeWrap").style.display = "none";
@@ -319,7 +355,7 @@
       }
       await window.rtdb.ref(window.PATHS.admin).update({ email:newEmail, password:newPass, mustChange:false, updatedAt:Date.now() });
       toast("تم تحديث بيانات الأدمن");
-      if($("adminCurrentEmail")) $("adminCurrentEmail").value = newEmail;
+      if($("adminCurrentEmail")) $("adminCurrentEmail").value = "";
       if($("adminNewEmail")) $("adminNewEmail").value = "";
       if($("adminCurrentPassword")) $("adminCurrentPassword").value = "";
       if($("adminNewPassword")) $("adminNewPassword").value = "";
@@ -385,7 +421,12 @@
   };
 
   function fillAdminForm(){
-    if($("adminCurrentEmail")) $("adminCurrentEmail").value = window.adminCache?.email || "";
+    // الحقول تبقى فارغة وتعرض تلميحات فقط، بدون كشف البريد أو كلمة المرور المحفوظة.
+    if($("adminCurrentEmail")) $("adminCurrentEmail").value = "";
+    if($("adminCurrentPassword")) $("adminCurrentPassword").value = "";
+    if($("adminNewEmail")) $("adminNewEmail").value = "";
+    if($("adminNewPassword")) $("adminNewPassword").value = "";
+    if($("adminConfirmPassword")) $("adminConfirmPassword").value = "";
   }
 
   function fillStoreForm(){
@@ -397,10 +438,28 @@
     if($("storeDescEn")) $("storeDescEn").value = s.storeDescEn || s.descriptionEn || "";
     if($("storeLogoUrl")) $("storeLogoUrl").value = s.storeLogoUrl || "";
     if($("storeTopBannerUrl")) $("storeTopBannerUrl").value = b.topBannerUrl || s.topBannerUrl || "";
+    if($("homeHeroImageUrl")) $("homeHeroImageUrl").value = s.homeHeroImageUrl || "";
+    if($("homeKickerAr")) $("homeKickerAr").value = s.homeKickerAr || "مجموعة الموسم الجديد";
+    if($("homeKickerEn")) $("homeKickerEn").value = s.homeKickerEn || "New Season Collection";
+    if($("homeTitleAr")) $("homeTitleAr").value = s.homeTitleAr || "أناقة بلا حدود.\nراحة بلا تنازلات.";
+    if($("homeTitleEn")) $("homeTitleEn").value = s.homeTitleEn || "Limitless Style.\nNo-Compromise Comfort.";
+    if($("homeSubtitleAr")) $("homeSubtitleAr").value = s.homeSubtitleAr || "اكتشف مجموعتنا الحصرية من الملابس الرياضية والكاجوال";
+    if($("homeSubtitleEn")) $("homeSubtitleEn").value = s.homeSubtitleEn || "Explore our exclusive sportswear and casual wear collection";
+    if($("announcementEnabled")) $("announcementEnabled").value = s.announcementEnabled === false ? "false" : "true";
+    if($("announcementTextAr")) $("announcementTextAr").value = s.announcementTextAr || "اطلب 3 بلايز وتوصيل مجاني";
+    if($("announcementTextEn")) $("announcementTextEn").value = s.announcementTextEn || "Order 3 shirts and get free delivery";
+    if($("exchangePolicyAr")) $("exchangePolicyAr").value = s.exchangePolicyAr || "سياسة تبديل خلال 24 ساعة. تكلفة تبديل الطلب على الزبون. في حال وجود أي أضرار في القطعة لا يمكن التبديل.";
+    if($("exchangePolicyEn")) $("exchangePolicyEn").value = s.exchangePolicyEn || "Exchange within 24 hours. Exchange delivery cost is paid by the customer. Damaged pieces cannot be exchanged.";
+    if($("trustCardsAr")) $("trustCardsAr").value = s.trustCardsAr || "شحن مجاني|عند شراء 3 قطع\nشحن سريع|خلال 24-48 ساعة\nاستبدال خلال 24 ساعة|وفقاً لسياسة المتجر\nدفع آمن|بنك فلسطين - جوال باي";
+    if($("trustCardsEn")) $("trustCardsEn").value = s.trustCardsEn || "Free delivery|When buying 3 pieces\nFast shipping|Within 24-48 hours\n24h exchange|According to store policy\nSecure payment|Bank of Palestine - Jawwal Pay";
+    if($("customerReviewsAr")) $("customerReviewsAr").value = s.customerReviewsAr || "";
+    if($("customerReviewsEn")) $("customerReviewsEn").value = s.customerReviewsEn || "";
     if($("enableCodGlobal")) $("enableCodGlobal").value = s.enableCodGlobal === false ? "false" : "true";
     if($("storeWhatsappEnabled")) $("storeWhatsappEnabled").value = s.whatsappEnabled === false ? "false" : "true";
     if($("storeWhatsappNumber")) $("storeWhatsappNumber").value = s.whatsappNumber || "";
     if($("storeWhatsappMessage")) $("storeWhatsappMessage").value = s.whatsappMessage || "مرحباً، أريد الاستفسار عن المنتجات";
+    fillSectionSettingsForm("sports");
+    fillSectionSettingsForm("casual");
   }
 
   window.saveStoreSettings = async function saveStoreSettings(){
@@ -412,13 +471,32 @@
       storeDescEn: clean($("storeDescEn")?.value),
       storeLogoUrl: clean($("storeLogoUrl")?.value),
       topBannerUrl: clean($("storeTopBannerUrl")?.value),
+      homeHeroImageUrl: clean($("homeHeroImageUrl")?.value),
+      homeKickerAr: clean($("homeKickerAr")?.value),
+      homeKickerEn: clean($("homeKickerEn")?.value),
+      homeTitleAr: clean($("homeTitleAr")?.value),
+      homeTitleEn: clean($("homeTitleEn")?.value),
+      homeSubtitleAr: clean($("homeSubtitleAr")?.value),
+      homeSubtitleEn: clean($("homeSubtitleEn")?.value),
+      announcementEnabled: $("announcementEnabled")?.value !== "false",
+      announcementTextAr: clean($("announcementTextAr")?.value),
+      announcementTextEn: clean($("announcementTextEn")?.value),
+      exchangePolicyAr: clean($("exchangePolicyAr")?.value),
+      exchangePolicyEn: clean($("exchangePolicyEn")?.value),
+      trustCardsAr: clean($("trustCardsAr")?.value),
+      trustCardsEn: clean($("trustCardsEn")?.value),
+      customerReviewsAr: clean($("customerReviewsAr")?.value),
+      customerReviewsEn: clean($("customerReviewsEn")?.value),
       enableCodGlobal: $("enableCodGlobal")?.value !== "false",
       whatsappEnabled: $("storeWhatsappEnabled")?.value !== "false",
       whatsappNumber: clean($("storeWhatsappNumber")?.value).replace(/[^0-9]/g, ""),
       whatsappMessage: clean($("storeWhatsappMessage")?.value) || "مرحباً، أريد الاستفسار عن المنتجات",
+      sectionSettings: {
+        sports: collectSectionSettingsForm("sports"),
+        casual: collectSectionSettingsForm("casual")
+      },
       updatedAt: Date.now()
     };
-    if(!payload.storeNameAr){ toast("أدخل اسم المتجر"); return; }
     setOverlayLoading(true);
     try{
       await Promise.all([
@@ -454,7 +532,7 @@
     const grid = $("categoryIconsGrid");
     if(!grid) return;
     const selected = clean($("categoryIcon")?.value) || "shirt";
-    grid.innerHTML = (window.CATEGORY_ICONS_1885 || []).map(icon => `
+    grid.innerHTML = (window.CATEGORY_ICONS_5546 || []).map(icon => `
       <button type="button" class="icon-option ${selected === icon.key ? 'active' : ''}" onclick="selectCategoryIcon('${icon.key}')">
         ${icon.svg}<span>${escapeHtml(icon.label)}</span>
       </button>
@@ -475,7 +553,7 @@
     if(img){
       box.innerHTML = `<img src="${escapeHtml(img)}" alt="preview">`;
     }else{
-      const found = (window.CATEGORY_ICONS_1885 || []).find(i => i.key === iconKey);
+      const found = (window.CATEGORY_ICONS_5546 || []).find(i => i.key === iconKey);
       box.innerHTML = found ? found.svg : "";
     }
   };
@@ -547,7 +625,7 @@
       <div class="mini-card flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-2xl border bg-white overflow-hidden flex items-center justify-center text-[#14454d]">
-            ${c.image ? `<img src="${escapeHtml(c.image)}" class="w-full h-full object-cover" alt="">` : ((window.CATEGORY_ICONS_1885 || []).find(i => i.key === c.icon)?.svg || "")}
+            ${c.image ? `<img src="${escapeHtml(c.image)}" class="w-full h-full object-cover" alt="">` : ((window.CATEGORY_ICONS_5546 || []).find(i => i.key === c.icon)?.svg || "")}
           </div>
           <div>
             <div class="font-black text-sm">${escapeHtml(c.nameAr || c.name)} / ${escapeHtml(c.nameEn || "-")}</div>
@@ -739,6 +817,7 @@
   window.resetSectionForm = function resetSectionForm(){
     ["sectionEditId","sectionTitleAr","sectionTitleEn","sectionLink","sectionImage","sectionImages","sectionOrder"].forEach(id => { if($(id)) $(id).value = ""; });
     if($("sectionType")) $("sectionType").value = "banner";
+    if($("sectionHomeSection")) $("sectionHomeSection").value = "sports";
     if($("sectionPlacement")) $("sectionPlacement").value = "after_categories";
     if($("sectionEnabled")) $("sectionEnabled").value = "true";
   };
@@ -752,6 +831,7 @@
       titleAr: clean($("sectionTitleAr")?.value),
       titleEn: clean($("sectionTitleEn")?.value),
       placement: clean($("sectionPlacement")?.value) || "after_categories",
+      homeSection: clean($("sectionHomeSection")?.value) || "sports",
       link: clean($("sectionLink")?.value) || "#",
       image,
       images: images.length ? images : (image ? [image] : []),
@@ -775,6 +855,7 @@
     if($("sectionTitleAr")) $("sectionTitleAr").value = s.titleAr || s.title || "";
     if($("sectionTitleEn")) $("sectionTitleEn").value = s.titleEn || "";
     if($("sectionPlacement")) $("sectionPlacement").value = s.placement || "after_categories";
+    if($("sectionHomeSection")) $("sectionHomeSection").value = s.homeSection || "sports";
     if($("sectionLink")) $("sectionLink").value = s.link || "#";
     if($("sectionImage")) $("sectionImage").value = s.image || "";
     if($("sectionImages")) $("sectionImages").value = asArray(s.images).join("\n");
@@ -792,7 +873,7 @@
   window.renderSectionsList = function renderSectionsList(){
     const box = $("sectionsList"); if(!box) return;
     const items = window.pageSectionsCache || [];
-    box.innerHTML = items.length ? items.map(s => `<div class="mini-card flex items-center justify-between gap-3"><div class="flex items-center gap-3"><img src="${escapeHtml(s.image || asArray(s.images)[0] || 'https://via.placeholder.com/80') }" class="w-16 h-12 rounded-xl object-cover border"><div><div class="font-black text-sm">${escapeHtml(s.titleAr || s.title || s.type)}</div><div class="text-xs text-gray-400 font-bold mt-1">${escapeHtml(s.type)} | ${escapeHtml(s.placement)} | ${s.enabled ? 'مفعل' : 'معطل'}</div></div></div><div class="flex gap-2"><button class="btn btn-secondary" onclick="editSection('${s.id}')">تعديل</button><button class="btn btn-danger" onclick="deleteSection('${s.id}')">حذف</button></div></div>`).join("") : `<div class="empty">لا توجد عناصر</div>`;
+    box.innerHTML = items.length ? items.map(s => `<div class="mini-card flex items-center justify-between gap-3"><div class="flex items-center gap-3"><img src="${escapeHtml(s.image || asArray(s.images)[0] || 'https://via.placeholder.com/80') }" class="w-16 h-12 rounded-xl object-cover border"><div><div class="font-black text-sm">${escapeHtml(s.titleAr || s.title || s.type)}</div><div class="text-xs text-gray-400 font-bold mt-1">${escapeHtml(getHomeSectionLabel(s.homeSection || 'sports'))} | ${escapeHtml(s.type)} | ${escapeHtml(s.placement)} | ${s.enabled ? 'مفعل' : 'معطل'}</div></div></div><div class="flex gap-2"><button class="btn btn-secondary" onclick="editSection('${s.id}')">تعديل</button><button class="btn btn-danger" onclick="deleteSection('${s.id}')">حذف</button></div></div>`).join("") : `<div class="empty">لا توجد عناصر</div>`;
   };
 
   // Sidebar Menu
@@ -894,6 +975,93 @@
     box.innerHTML = items.length ? items.map(s => `<div class="mini-card flex items-center justify-between gap-3"><div><div class="font-black text-sm">${escapeHtml(s.platform)}</div><div class="text-xs text-gray-400 font-bold mt-1 break-all">${escapeHtml(s.url)} | ${s.enabled ? 'مفعل' : 'معطل'}</div></div><div class="flex gap-2"><button class="btn btn-secondary" onclick="editSocialLink('${s.id}')">تعديل</button><button class="btn btn-danger" onclick="deleteSocialLink('${s.id}')">حذف</button></div></div>`).join("") : `<div class="empty">لا توجد روابط</div>`;
   };
 
+
+  let orderNotificationStarted = false;
+  let orderNotificationRef = null;
+  let orderNotificationHandler = null;
+  let knownOrderIdsForNotification = new Set();
+
+  function isAdminSessionActive(){
+    return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+  }
+
+  function stopOrderNotifications(){
+    try{
+      if(orderNotificationRef && orderNotificationHandler){
+        orderNotificationRef.off("child_added", orderNotificationHandler);
+      }
+    }catch(e){}
+    orderNotificationRef = null;
+    orderNotificationHandler = null;
+    orderNotificationStarted = false;
+  }
+
+  function requestOrderNotificationPermission(){
+    if(!isAdminSessionActive()) return;
+    if(typeof Notification === "undefined") return;
+    if(Notification.permission === "default"){
+      try{ Notification.requestPermission(); }catch(e){}
+    }
+  }
+
+  function playOrderBeep(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    }catch(e){}
+  }
+
+  function fireOrderNotification(orderId, order){
+    if(!isAdminSessionActive()) return;
+    const title = "طلب جديد في المتجر";
+    const body = `${order?.name || order?.customerName || "زبون"} - ${order?.pricing?.displayTotal || order?.displayAmount || ""}`;
+    toast(title);
+    playOrderBeep();
+    if(typeof Notification !== "undefined" && Notification.permission === "granted"){
+      try{
+        const n = new Notification(title, { body, tag: `order-${orderId}` });
+        n.onclick = () => { window.focus(); setTab("orders"); };
+      }catch(e){}
+    }
+  }
+
+  function startOrderNotifications(){
+    if(!isAdminSessionActive() || orderNotificationStarted || !window.rtdb || !window.PATHS?.orders) return;
+    orderNotificationStarted = true;
+    knownOrderIdsForNotification = new Set((window.ordersCache || []).map(o => String(o.id)));
+    orderNotificationRef = window.rtdb.ref(window.PATHS.orders).limitToLast(25);
+    orderNotificationHandler = snap => {
+      if(!isAdminSessionActive()){
+        stopOrderNotifications();
+        return;
+      }
+      const id = String(snap.key || "");
+      const order = snap.val() || {};
+      if(!id) return;
+      if(knownOrderIdsForNotification.has(id)){
+        return;
+      }
+      knownOrderIdsForNotification.add(id);
+      fireOrderNotification(id, order);
+      setTimeout(() => {
+        if(isAdminSessionActive()) loadAllData();
+      }, 400);
+    };
+    orderNotificationRef.on("child_added", orderNotificationHandler);
+  }
+
   function boot(){
     renderCategoryIcons();
     resetCategoryForm();
@@ -904,7 +1072,7 @@
     renderCheckoutFieldsBuilder([]);
     if(sessionStorage.getItem(ADMIN_SESSION_KEY) === "1"){
       setScreen(true);
-      loadAllData();
+      loadAllData().then(() => startOrderNotifications());
     }else{
       setScreen(false);
     }

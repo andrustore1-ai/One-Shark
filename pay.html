@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tofan Store | الدفع</title>
+  <title>المتجر | الدفع</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -625,6 +625,16 @@
           <div id="payerFieldsWrap" class="space-y-4"></div>
         </div>
       </div>
+
+      <div id="couponCard" class="card p-5 mb-4">
+        <div id="couponTitle" class="section-title !text-[18px] mb-1">كود الخصم</div>
+        <div id="couponSubtitle" class="subtle mb-3">اكتب كود الخصم الخاص بالمنتج إن وجد.</div>
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <input id="couponInput" class="field" placeholder="مثال: TSHIRT10">
+          <button id="couponApplyBtn" type="button" class="primary-btn px-5" onclick="applyCouponCode()">تطبيق</button>
+        </div>
+        <div id="couponMessage" class="text-xs font-black mt-3"></div>
+      </div>
     </section>
 
     <section id="viewConfirm" class="view-panel hidden-view">
@@ -638,6 +648,7 @@
 
         <div class="space-y-3">
           <div class="summary-row"><span id="summarySubtotalLabel" class="k">المبلغ الفرعي</span><span class="v" id="summarySubtotal">0 ₪</span></div>
+          <div id="summaryDiscountRow" class="summary-row hidden-view"><span id="summaryDiscountLabel" class="k">الخصم</span><span class="v" id="summaryDiscount">-0 ₪</span></div>
           <div class="summary-row"><span id="summaryShippingLabel" class="k">رسوم التوصيل</span><span class="v" id="summaryShipping">0 ₪</span></div>
           <div class="summary-row"><span id="summaryMethodLabel" class="k">طريقة الدفع</span><span class="v" id="summaryMethod">-</span></div>
           <div class="summary-row"><span id="summaryZoneLabel" class="k">منطقة التوصيل</span><span class="v" id="summaryZone">-</span></div>
@@ -683,28 +694,28 @@
   </div>
 
   <script>
-    firebase.initializeApp(firebaseConfig1885);
+    firebase.initializeApp(firebaseConfig5546);
     const rtdb = firebase.database();
     const auth = firebase.auth();
 
     const PATHS = {
-      store: FIREBASE_PATHS_1885.settingsStore,
-      products: FIREBASE_PATHS_1885.products,
-      paymentMethods: FIREBASE_PATHS_1885.settingsPaymentMethods,
-      orders: FIREBASE_PATHS_1885.orders,
-      shippingZones: "settings1885/shippingZones1885",
-      globalCheckoutFields: "settings1885/globalCheckoutFields1885",
-      users: "users1885"
+      store: FIREBASE_PATHS_5546.settingsStore,
+      products: FIREBASE_PATHS_5546.products,
+      paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
+      orders: FIREBASE_PATHS_5546.orders,
+      shippingZones: "settings83c80/shippingZones83c80",
+      globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
+      users: "users83c80"
     };
 
     const LOCAL_KEYS = {
-      checkoutSelection: "tofan_checkout_selection_1885"
+      checkoutSelection: "store83c80_checkout_selection"
     };
 
     const LANGUAGE_KEYS = [
-      "tofan_lang_1885",
-      "tofan_language_1885",
-      "language1885",
+      "store83c80_lang",
+      "store83c80_language",
+      "language83c80",
       "store_language",
       "store_lang",
       "site_lang",
@@ -754,6 +765,13 @@
         selectedMethodDetails: "تفاصيل الطريقة المختارة",
         payAmount: "المبلغ الذي ستدفعه",
         payerFields: "البيانات المطلوبة لهذه الطريقة",
+        couponTitle: "كود الخصم",
+        couponSubtitle: "اكتب كود الخصم الخاص بالمنتج إن وجد، وسيتم خصمه من المنتجات المرتبطة به فقط.",
+        couponPlaceholder: "مثال: TSHIRT10",
+        couponApply: "تطبيق",
+        couponDiscount: "الخصم",
+        couponSuccess: "تم تطبيق كود الخصم بنجاح",
+        couponInvalid: "كود الخصم غير صحيح أو غير متاح لهذه المنتجات",
         orderSummary: "ملخص الطلب",
         orderSummarySubtitle: "راجع كل التفاصيل قبل الإرسال",
         subtotal: "المبلغ الفرعي",
@@ -847,6 +865,13 @@
         selectedMethodDetails: "Selected method details",
         payAmount: "Amount to pay",
         payerFields: "Required details for this payment method",
+        couponTitle: "Discount Code",
+        couponSubtitle: "Enter a product discount code if available. The discount will apply only to linked products.",
+        couponPlaceholder: "Example: TSHIRT10",
+        couponApply: "Apply",
+        couponDiscount: "Discount",
+        couponSuccess: "Discount code applied successfully",
+        couponInvalid: "Invalid code or not available for these products",
         orderSummary: "Order Summary",
         orderSummarySubtitle: "Review all details before submitting",
         subtotal: "Subtotal",
@@ -937,7 +962,7 @@
       document.documentElement.lang = currentLang;
       document.documentElement.dir = isEnglish() ? "ltr" : "rtl";
       document.body.style.direction = isEnglish() ? "ltr" : "rtl";
-      document.title = isEnglish() ? "Tofan Store | Checkout" : "Tofan Store | الدفع";
+      document.title = isEnglish() ? "Store | Checkout" : "المتجر | الدفع";
     }
 
     function applyStaticTranslations(){
@@ -982,10 +1007,15 @@
       document.getElementById("selectedMethodDetailsText").textContent = tr("selectedMethodDetails");
       document.getElementById("payAmountLabel").textContent = tr("payAmount");
       document.getElementById("payerFieldsLabel").textContent = tr("payerFields");
+      document.getElementById("couponTitle").textContent = tr("couponTitle");
+      document.getElementById("couponSubtitle").textContent = tr("couponSubtitle");
+      document.getElementById("couponInput").placeholder = tr("couponPlaceholder");
+      document.getElementById("couponApplyBtn").textContent = tr("couponApply");
 
       document.getElementById("confirmTitle").textContent = tr("orderSummary");
       document.getElementById("confirmSubtitle").textContent = tr("orderSummarySubtitle");
       document.getElementById("summarySubtotalLabel").textContent = tr("subtotal");
+      document.getElementById("summaryDiscountLabel").textContent = tr("couponDiscount");
       document.getElementById("summaryShippingLabel").textContent = tr("shippingFee");
       document.getElementById("summaryMethodLabel").textContent = tr("paymentMethod");
       document.getElementById("summaryZoneLabel").textContent = tr("shippingZone");
@@ -1036,12 +1066,45 @@
     let checkoutSelection = { source:"buy_now", items:[] };
     let currentView = 1;
     let selectedMethod = null;
+    let appliedCoupon = null;
     let selectedShippingZone = null;
     let withoutLoginMode = false;
     let currentColorIndex = 0;
     let currentSliderImages = [];
     let selectedSize = "";
     let activeEditorItemIndex = 0;
+    function normalizeImageUrl(url){
+      const raw = String(url || "").trim();
+      if(!raw) return "";
+      if(raw.startsWith("gs://")){
+        const without = raw.replace(/^gs:\/\//, "");
+        const slashIndex = without.indexOf("/");
+        if(slashIndex > -1){
+          const bucket = without.slice(0, slashIndex);
+          const path = without.slice(slashIndex + 1);
+          return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodeURIComponent(path)}?alt=media`;
+        }
+        return "";
+      }
+      return raw;
+    }
+
+    function getStoreLogoUrl(){
+      return normalizeImageUrl(storeSettings.storeLogoUrl || storeSettings.logoUrl || storeSettings.logo || storeSettings.storeLogo || storeSettings.storeLogoImageUrl || storeSettings.logoImageUrl || "");
+    }
+
+    function applyWatermarkLogo(){
+      const logo = document.getElementById("watermarkLogo");
+      if(!logo) return;
+      const src = getStoreLogoUrl();
+      const hide = () => { logo.removeAttribute("src"); logo.style.display = "none"; };
+      if(!src){ hide(); return; }
+      logo.onload = () => { logo.style.display = logo.naturalWidth ? "block" : "none"; };
+      logo.onerror = hide;
+      logo.decoding = "async";
+      logo.src = src;
+    }
+
     let activeUnitIndex = 0;
 
     function setLoadingBar(on){
@@ -1242,7 +1305,7 @@
     }
 
     function goLoginPage(){
-      sessionStorage.setItem("login_redirect_1885", "pay.html");
+      sessionStorage.setItem("login_redirect_83c80", "pay.html");
       window.location.href = "login.html";
     }
 
@@ -1270,6 +1333,7 @@
         map[id] = {
           id,
           categoryId: v.categoryId || v.category || "",
+          homeSection: v.homeSection || v.mainSection || "sports",
           nameAr: v.nameAr || v.name || "",
           nameEn: v.nameEn || "",
           descAr: v.descAr || v.desc || "",
@@ -1285,10 +1349,28 @@
           freeShipping: v.freeShipping === true,
           enableShipping: v.enableShipping === true,
           enableCod: v.enableCod !== false,
+          couponCode: v.couponCode || "",
+          couponDiscountAmount: Number(v.couponDiscountAmount || v.couponDiscount || 0),
+          couponEnabled: v.couponEnabled === true,
           enabled: v.enabled !== false
         };
       });
       return map;
+    }
+
+    function getCheckoutHomeSection(){
+      const item = (checkoutSelection.items || [])[0] || {};
+      return item.homeSection || "sports";
+    }
+
+    function getEffectiveEnableCodGlobal(){
+      const rawSection = (storeSettings.sectionSettings || {})[getCheckoutHomeSection()] || {};
+      if(typeof rawSection.enableCodGlobal === "boolean") return rawSection.enableCodGlobal;
+      return storeSettings.enableCodGlobal !== false;
+    }
+
+    function checkoutItemsAllowCod(){
+      return (checkoutSelection.items || []).every(item => item.enableCod !== false);
     }
 
     function normalizePaymentMethods(raw){
@@ -1316,11 +1398,12 @@
         ]
       };
 
-      const hasCodAlready = fromDb.some(x => x.isCod === true);
-      if(hasCodAlready){
-        return [fixedCod, ...fromDb.filter(x => !x.isCod), ...fromDb.filter(x => x.isCod)];
-      }
-      return [fixedCod, ...fromDb];
+      const customMethods = fromDb.filter(x => !x.isCod);
+      const dbCodMethods = fromDb.filter(x => x.isCod);
+      const codEnabled = getEffectiveEnableCodGlobal() && checkoutItemsAllowCod();
+      if(!codEnabled) return customMethods;
+      if(dbCodMethods.length) return [fixedCod, ...customMethods, ...dbCodMethods];
+      return [fixedCod, ...customMethods];
     }
 
     function normalizeShippingZones(raw){
@@ -1416,6 +1499,7 @@
           image1: item.image1 || db.image1 || "",
           image2: item.image2 || db.image2 || "",
           oldPrice: Number(db.oldPrice || 0),
+          homeSection: item.homeSection || db.homeSection || "sports",
           descAr: db.descAr || "",
           descEn: db.descEn || "",
           images: Array.isArray(db.images) ? db.images : [],
@@ -1425,6 +1509,9 @@
           freeShipping: db.freeShipping === true,
           enableShipping: db.enableShipping === true,
           enableCod: db.enableCod !== false,
+          couponCode: item.couponCode || db.couponCode || "",
+          couponDiscountAmount: Number(item.couponDiscountAmount ?? db.couponDiscountAmount ?? db.couponDiscount ?? 0),
+          couponEnabled: item.couponEnabled === true || db.couponEnabled === true,
           unitSelections: Array.isArray(item.unitSelections) ? item.unitSelections : []
         };
         ensureUnitSelections(merged);
@@ -1577,7 +1664,7 @@
         badge.classList.add("hidden-view");
       }
 
-      document.getElementById("watermarkLogo").src = storeSettings.storeLogoUrl || "";
+      applyWatermarkLogo();
       document.getElementById("editorQtyValue").textContent = item.qty;
 
       currentColorIndex = activeUnit?.colorIndex >= 0 ? activeUnit.colorIndex : 0;
@@ -2063,8 +2150,57 @@
       return total;
     }
 
+    function normalizeCouponCode(code){
+      return String(code || "").trim().toUpperCase();
+    }
+
+    function getCouponDiscountForItem(item){
+      if(!appliedCoupon) return 0;
+      const itemCode = normalizeCouponCode(item.couponCode);
+      if(item.couponEnabled !== true || !itemCode || itemCode !== appliedCoupon.code) return 0;
+      const qty = Math.max(1, Number(item.qty || 1));
+      const discount = Math.max(0, Number(item.couponDiscountAmount || 0)) * qty;
+      const itemTotal = Math.max(0, Number(item.price || 0) * qty);
+      return Math.min(itemTotal, discount);
+    }
+
+    function getCouponDiscountTotal(){
+      return checkoutSelection.items.reduce((sum, item) => sum + getCouponDiscountForItem(item), 0);
+    }
+
+    function setCouponMessage(type, text){
+      const msg = document.getElementById("couponMessage");
+      if(!msg) return;
+      msg.textContent = text || "";
+      msg.className = type === "success" ? "text-xs font-black mt-3 text-emerald-600" : "text-xs font-black mt-3 text-red-500";
+    }
+
+    function applyCouponCode(){
+      const input = document.getElementById("couponInput");
+      const code = normalizeCouponCode(input?.value);
+      if(!code){
+        appliedCoupon = null;
+        setCouponMessage("error", tr("couponInvalid"));
+        updateMethodPayAmount();
+        return;
+      }
+
+      const matches = checkoutSelection.items.some(item => {
+        return item.couponEnabled === true && normalizeCouponCode(item.couponCode) === code && Number(item.couponDiscountAmount || 0) > 0;
+      });
+
+      if(matches){
+        appliedCoupon = { code };
+        setCouponMessage("success", tr("couponSuccess"));
+      }else{
+        appliedCoupon = null;
+        setCouponMessage("error", tr("couponInvalid"));
+      }
+      updateMethodPayAmount();
+    }
+
     function getGrandTotal(){
-      return getSubtotal() + getShippingTotal();
+      return Math.max(0, getSubtotal() - getCouponDiscountTotal() + getShippingTotal());
     }
 
     function buildSummary(){
@@ -2097,7 +2233,10 @@
         `;
       }).join("");
 
+      const discountTotal = getCouponDiscountTotal();
       document.getElementById("summarySubtotal").textContent = money(getSubtotal());
+      document.getElementById("summaryDiscountRow").classList.toggle("hidden-view", discountTotal <= 0);
+      document.getElementById("summaryDiscount").textContent = `-${money(discountTotal)}`;
       document.getElementById("summaryShipping").textContent = money(getShippingTotal());
       document.getElementById("summaryMethod").textContent = getLocalizedPaymentMethodName(selectedMethod) || "-";
       document.getElementById("summaryZone").textContent = selectedShippingZone ? getLocalizedShippingZoneName(selectedShippingZone) : tr("reviewWithout");
@@ -2143,6 +2282,10 @@
         rows.push(`<div class="field-preview"><div class="k">${escapeHtml(tr("shippingZone"))}</div><div class="v">${escapeHtml(getLocalizedShippingZoneName(selectedShippingZone))} - ${money(selectedShippingZone.price)}</div></div>`);
       }
 
+      if(appliedCoupon && getCouponDiscountTotal() > 0){
+        rows.push(`<div class="field-preview"><div class="k">${escapeHtml(tr("couponDiscount"))}</div><div class="v">${escapeHtml(appliedCoupon.code)} - ${money(getCouponDiscountTotal())}</div></div>`);
+      }
+
       Object.keys(payerCollected.values).forEach(key => {
         const value = payerCollected.values[key];
         if(String(value).trim()){
@@ -2179,6 +2322,10 @@
               image1: item.image1 || "",
               image2: item.image2 || "",
               oldPrice: Number(item.oldPrice || 0),
+              couponCode: item.couponCode || "",
+              couponDiscountAmount: Number(item.couponDiscountAmount || 0),
+              couponEnabled: item.couponEnabled === true,
+              couponDiscount: Number(getCouponDiscountForItem(item)),
               images: item.images || [],
               colorOptions: item.colorOptions || [],
               sizes: item.sizes || [],
@@ -2194,9 +2341,12 @@
 
           pricing: {
             subtotal: Number(getSubtotal()),
+            discountTotal: Number(getCouponDiscountTotal()),
+            couponCode: appliedCoupon?.code || "",
             shippingTotal: Number(getShippingTotal()),
             total: Number(getGrandTotal()),
             displaySubtotal: money(getSubtotal()),
+            displayDiscount: money(getCouponDiscountTotal()),
             displayShipping: money(getShippingTotal()),
             displayTotal: money(getGrandTotal())
           },
@@ -2308,12 +2458,11 @@
 
         storeSettings = storeSnap.val() || {};
         productsMap = normalizeProducts(productsSnap.val() || {});
+        checkoutSelection.items = enrichCheckoutItems(checkoutSelection.items || []);
+        persistCheckoutSelection();
         paymentMethods = normalizePaymentMethods(methodsSnap.val() || {});
         shippingZones = normalizeShippingZones(shippingSnap.val() || {});
         globalFields = normalizeGlobalFields(globalFieldsSnap.val() || []);
-
-        checkoutSelection.items = enrichCheckoutItems(checkoutSelection.items || []);
-        persistCheckoutSelection();
 
         if(!checkoutSelection.items.length){
           showToast(tr("noItemsToast"));
@@ -2321,8 +2470,7 @@
           return;
         }
 
-        const logo = storeSettings.storeLogoUrl || "";
-        document.getElementById("watermarkLogo").src = logo;
+        applyWatermarkLogo();
 
         renderSelectedItems();
         renderProductPreview();
