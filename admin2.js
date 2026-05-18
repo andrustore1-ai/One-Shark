@@ -137,6 +137,10 @@
     wrap.appendChild(el);
   };
 
+  window.addProductColorOnlyBuilder = function addProductColorOnlyBuilder(data = {}) {
+    return window.addProductColorImageBuilder(data);
+  };
+
   window.updateColorCodeFromSelect = function updateColorCodeFromSelect(selectEl) {
     const wrapper = selectEl.closest(".product-color-image-item");
     if (!wrapper) return;
