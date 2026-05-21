@@ -12,6 +12,12 @@
     return Array.isArray(v) ? v : [];
   }
 
+  function asList(v) {
+    if (Array.isArray(v)) return v;
+    if (v && typeof v === "object") return Object.values(v);
+    return [];
+  }
+
   function uniqueStrings(arr) {
     return [...new Set(asArray(arr).map(x => String(x || "").trim()).filter(Boolean))];
   }
@@ -105,7 +111,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label class="label">اسم اللون</label>
-          <input class="field product-color-name" value="${safeEscape(data.name || "")}" placeholder="مثال: بيج">
+          <input class="field product-color-name" value="${safeEscape(data.name || "")}" placeholder="مثال: بيج" onblur="renderProductVariantStockBuilder()">
         </div>
 
         <div>
@@ -120,21 +126,24 @@
 
         <div>
           <label class="label">كود اللون</label>
-          <input class="field product-color-code" value="${safeEscape(data.code || "")}" placeholder="#f5f5dc">
+          <input class="field product-color-code" value="${safeEscape(data.code || "")}" placeholder="#f5f5dc" onblur="renderProductVariantStockBuilder()">
         </div>
 
         <div>
           <label class="label">رابط الصورة الاختيارية</label>
-          <input class="field product-color-image-url" value="${safeEscape(data.image || "")}" placeholder="https://example.com/color-image.jpg">
+          <input class="field product-color-image-url" value="${safeEscape(data.image || "")}" placeholder="https://example.com/color-image.jpg" onblur="renderProductVariantStockBuilder()">
           <div class="hint">ممكن تتركه فارغ، وسيتم حفظ اللون بدون صورة.</div>
         </div>
       </div>
 
       <div class="mt-3">
-        <button type="button" class="btn btn-danger" onclick="this.closest('.product-color-image-item').remove()">حذف</button>
+        <button type="button" class="btn btn-danger" onclick="this.closest('.product-color-image-item').remove(); renderProductVariantStockBuilder();">حذف</button>
       </div>
     `;
     wrap.appendChild(el);
+    if (typeof window.renderProductVariantStockBuilder === "function") {
+      setTimeout(() => window.renderProductVariantStockBuilder(), 0);
+    }
   };
 
   window.addProductColorOnlyBuilder = function addProductColorOnlyBuilder(data = {}) {
@@ -153,6 +162,7 @@
       if (codeInput) codeInput.value = chosen.code;
       if (nameInput && !safeStr(nameInput.value)) nameInput.value = chosen.name;
     }
+    if (typeof window.renderProductVariantStockBuilder === "function") window.renderProductVariantStockBuilder();
   };
 
   window.collectProductColorOptions = function collectProductColorOptions() {
@@ -231,6 +241,7 @@
     input.value = "";
     renderProductCustomSizes();
     collectProductSizes();
+    if (typeof window.renderProductVariantStockBuilder === "function") window.renderProductVariantStockBuilder();
   };
 
   window.removeCustomProductSize = function removeCustomProductSize(index) {
@@ -238,6 +249,7 @@
     window.customProductSizes.splice(index, 1);
     renderProductCustomSizes();
     collectProductSizes();
+    if (typeof window.renderProductVariantStockBuilder === "function") window.renderProductVariantStockBuilder();
   };
 
   window.collectProductSizes = function collectProductSizes() {
@@ -281,6 +293,131 @@
     collectProductSizes();
   };
 
+
+
+  function makeVariantKey(value, fallback = "key") {
+    const raw = safeStr(value) || fallback;
+    try {
+      return btoa(unescape(encodeURIComponent(raw))).replace(/[=+/]/g, "_");
+    } catch (e) {
+      return raw.toLowerCase().replace(/\s+/g, "_").replace(/[^\u0600-\u06FFa-z0-9_]/g, "") || fallback;
+    }
+  }
+
+  function makeColorStockKey(color = {}) {
+    return color.key || color.id || makeVariantKey(`${color.name || "color"}|${color.code || ""}`, "color");
+  }
+
+  function getCurrentProductColorsForStock() {
+    const colors = collectProductColorOptions();
+    if (colors.length) {
+      return colors.map(c => ({
+        key: makeColorStockKey(c),
+        name: c.name || "لون",
+        code: c.code || "#cccccc",
+        image: asArray(c.images)[0] || ""
+      }));
+    }
+    return [{ key: "default", name: "افتراضي", code: "#cccccc", image: "" }];
+  }
+
+  function getCurrentProductSizesForStock() {
+    const sizes = collectProductSizes();
+    return sizes.length ? sizes : ["بدون مقاس"];
+  }
+
+  function collectProductVariantMatrix(writeHidden = true) {
+    const cards = [...document.querySelectorAll(".variant-stock-card")];
+    const matrix = cards.map(card => {
+      const size = safeStr(card.dataset.size);
+      const colors = [...card.querySelectorAll(".variant-color-stock-item")].map(row => ({
+        key: safeStr(row.dataset.colorKey) || makeVariantKey(`${row.dataset.colorName || "color"}|${row.dataset.colorCode || ""}`, "color"),
+        name: safeStr(row.dataset.colorName) || "لون",
+        code: normalizeHexColor(row.dataset.colorCode || "#cccccc"),
+        image: safeStr(row.dataset.colorImage),
+        stock: Math.max(0, Number(row.querySelector(".variant-stock-input")?.value || 0))
+      }));
+      return { size, colors };
+    }).filter(row => row.size && row.colors.length);
+
+    const hidden = byId("productVariantMatrix");
+    if (hidden && writeHidden) hidden.value = JSON.stringify(matrix, null, 2);
+    return matrix;
+  }
+
+  function buildVariantStockLookup(matrix) {
+    const lookup = new Map();
+    asList(matrix).forEach(row => {
+      const size = safeStr(row.size);
+      asList(row.colors).forEach(color => {
+        const key = safeStr(color.key) || makeColorStockKey(color);
+        const code = normalizeHexColor(color.code || "");
+        const stock = Math.max(0, Number(color.stock || 0));
+        lookup.set(`${size}__key__${key}`, stock);
+        lookup.set(`${size}__name__${safeStr(color.name)}__${code}`, stock);
+      });
+    });
+    return lookup;
+  }
+
+  window.renderProductVariantStockBuilder = function renderProductVariantStockBuilder(existingMatrix = null) {
+    const wrap = byId("variantStockBuilder");
+    if (!wrap) return;
+
+    const sourceMatrix = existingMatrix || collectProductVariantMatrix(false) || [];
+    const lookup = buildVariantStockLookup(sourceMatrix);
+    const sizes = getCurrentProductSizesForStock();
+    const colors = getCurrentProductColorsForStock();
+
+    if (!sizes.length) {
+      wrap.innerHTML = `<div class="stock-empty-note">أضف مقاس واحد على الأقل حتى يظهر جدول المخزون.</div>`;
+      return;
+    }
+
+    wrap.innerHTML = sizes.map(size => {
+      const colorRows = colors.map(color => {
+        const key = makeColorStockKey(color);
+        const code = normalizeHexColor(color.code || "#cccccc");
+        const stock = lookup.has(`${size}__key__${key}`)
+          ? lookup.get(`${size}__key__${key}`)
+          : (lookup.get(`${size}__name__${safeStr(color.name)}__${code}`) ?? 0);
+
+        return `
+          <div class="variant-color-stock-item"
+               data-color-key="${safeEscape(key)}"
+               data-color-name="${safeEscape(color.name || "لون")}" 
+               data-color-code="${safeEscape(code)}"
+               data-color-image="${safeEscape(color.image || "")}">
+            <span class="variant-color-dot" style="background:${safeEscape(code)}"></span>
+            <div class="min-w-0">
+              <div class="font-black text-sm text-gray-900">${safeEscape(color.name || "لون")}</div>
+              <div class="text-[11px] text-gray-400 font-black mt-1">${safeEscape(code)}${color.image ? " | له صورة" : ""}</div>
+            </div>
+            <input class="variant-stock-input" type="number" min="0" step="1" value="${Number(stock || 0)}" oninput="collectProductVariantMatrix(true)" placeholder="المخزون">
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="variant-stock-card" data-size="${safeEscape(size)}">
+          <div class="variant-stock-head">
+            <span class="variant-stock-size">مقاس ${safeEscape(size)}</span>
+            <span class="text-xs text-gray-400 font-black">${colors.length} لون</span>
+          </div>
+          <div class="space-y-3">${colorRows}</div>
+        </div>
+      `;
+    }).join("");
+
+    collectProductVariantMatrix(true);
+  };
+
+  window.getProductInventoryTotal = function getProductInventoryTotal(matrix = null) {
+    return asList(matrix || collectProductVariantMatrix(false)).reduce((sum, row) => {
+      return sum + asList(row.colors).reduce((s, color) => s + Math.max(0, Number(color.stock || 0)), 0);
+    }, 0);
+  };
+
   window.resetProductForm = function resetProductForm() {
     const idsToClear = [
       "productEditId",
@@ -317,6 +454,7 @@
     if (typeof clearProductSliderImages === "function") clearProductSliderImages();
 
     resetProductSizesBuilder();
+    if (typeof window.renderProductVariantStockBuilder === "function") window.renderProductVariantStockBuilder([]);
 
     if ((window.categoriesCache || [])[0] && byId("productCategoryId")) {
       byId("productCategoryId").value = window.categoriesCache[0].id;
@@ -331,6 +469,7 @@
     const id = safeStr(byId("productEditId")?.value);
     const colorOptions = collectProductColorOptions();
     const sizes = collectProductSizes();
+    const variantMatrix = collectProductVariantMatrix(true);
 
     const payload = {
       categoryId: safeStr(byId("productCategoryId")?.value),
@@ -355,6 +494,8 @@
         .filter(Boolean)),
       colorOptions,
       sizes,
+      variantMatrix,
+      inventoryTotal: getProductInventoryTotal(variantMatrix),
       shippingFee: Number(byId("productShippingFee")?.value || 0),
       freeShipping: byId("productFreeShipping")?.value === "true",
       enableCod: byId("productEnableCod")?.value === "true",
@@ -455,8 +596,14 @@
     }
 
     fillProductSizesBuilder(asArray(p.sizes));
+    if (typeof window.renderProductVariantStockBuilder === "function") {
+      window.renderProductVariantStockBuilder(asArray(p.variantMatrix));
+    }
     if (byId("productColorOptions")) {
       byId("productColorOptions").value = JSON.stringify(colors, null, 2);
+    }
+    if (byId("productVariantMatrix")) {
+      byId("productVariantMatrix").value = JSON.stringify(asArray(p.variantMatrix), null, 2);
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -497,6 +644,7 @@
     box.innerHTML = items.map(p => {
       const colors = asArray(p.colorOptions);
       const sizes = asArray(p.sizes);
+      const inventoryTotal = Number(p.inventoryTotal || getProductInventoryTotal(asList(p.variantMatrix)));
 
       const colorsHtml = colors.length
         ? colors.slice(0, 8).map(c => `
@@ -528,6 +676,7 @@
 
             <div class="mt-2 flex flex-wrap items-center gap-3">${colorsHtml}</div>
             <div class="mt-2 flex items-center gap-2 flex-wrap">${sizesHtml}</div>
+            <div class="mt-2 text-xs font-black ${inventoryTotal > 0 ? 'text-emerald-600' : 'text-red-500'}">إجمالي المخزون: ${inventoryTotal}</div>
           </div>
 
           <div class="flex gap-2">
@@ -971,18 +1120,178 @@
     renderOrdersList();
   };
 
+
+
+  function getOrderProductsList(order) {
+    return Array.isArray(order?.items) ? order.items : (Array.isArray(order?.products) ? order.products : []);
+  }
+
+  function getOrderUnitSelections(product) {
+    const units = asArray(product.unitSelections);
+    if (units.length) return units;
+    const qty = Math.max(1, Number(product.qty || product.quantity || 1));
+    return Array.from({ length: qty }, (_, i) => ({
+      pieceNo: i + 1,
+      size: product.selectedSize || "",
+      colorName: product.selectedColorName || product.selectedColor || "",
+      colorCode: product.selectedColorCode || "",
+      colorKey: product.selectedColorKey || ""
+    }));
+  }
+
+  function makeOrderDeductionMap(order) {
+    const groups = new Map();
+    getOrderProductsList(order).forEach(product => {
+      const productId = safeStr(product.id || product.productId);
+      if (!productId) return;
+      getOrderUnitSelections(product).forEach(unit => {
+        const size = safeStr(unit.size) || "بدون مقاس";
+        const colorKey = safeStr(unit.colorKey || unit.variantKey || unit.stockKey || "");
+        const colorName = safeStr(unit.colorName || unit.selectedColorName || unit.selectedColor || "");
+        const colorCode = normalizeHexColor(unit.colorCode || unit.selectedColorCode || "");
+        const key = `${productId}__${size}__${colorKey || colorName}__${colorCode}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            productId,
+            productName: product.nameAr || product.nameEn || product.name || productId,
+            size,
+            colorKey,
+            colorName,
+            colorCode,
+            qty: 0
+          });
+        }
+        groups.get(key).qty += 1;
+      });
+    });
+    return [...groups.values()];
+  }
+
+  function findVariantRow(matrix, size) {
+    return asArray(matrix).find(row => safeStr(row.size) === safeStr(size)) || null;
+  }
+
+  function findVariantColor(row, deduction) {
+    const colors = asArray(row?.colors);
+    return colors.find(c => deduction.colorKey && safeStr(c.key) === deduction.colorKey)
+      || colors.find(c => safeStr(c.name) === deduction.colorName && normalizeHexColor(c.code || "") === deduction.colorCode)
+      || colors.find(c => safeStr(c.name) === deduction.colorName)
+      || null;
+  }
+
+  async function decrementProductInventory(productId, deductions) {
+    const ref = window.rtdb.ref(`${window.PATHS.products}/${productId}/variantMatrix`);
+    let failureMessage = "";
+
+    await new Promise((resolve, reject) => {
+      ref.transaction(current => {
+        const matrix = asList(current).map(row => ({
+          ...row,
+          colors: asList(row.colors).map(color => ({ ...color }))
+        }));
+
+        if (!matrix.length) return current || [];
+
+        for (const deduction of deductions) {
+          const row = findVariantRow(matrix, deduction.size);
+          const color = findVariantColor(row, deduction);
+          if (!row || !color) {
+            failureMessage = `لم يتم العثور على مخزون ${deduction.productName} / ${deduction.size} / ${deduction.colorName || "لون"}`;
+            return;
+          }
+
+          const currentStock = Math.max(0, Number(color.stock || 0));
+          if (currentStock < deduction.qty) {
+            failureMessage = `المخزون غير كافٍ: ${deduction.productName} / ${deduction.size} / ${deduction.colorName || "لون"}. المتاح ${currentStock} والمطلوب ${deduction.qty}`;
+            return;
+          }
+
+          color.stock = currentStock - deduction.qty;
+        }
+
+        return matrix;
+      }, (error, committed) => {
+        if (error) reject(error);
+        else if (!committed) reject(new Error(failureMessage || "تعذر خصم المخزون"));
+        else resolve();
+      }, false);
+    });
+
+    try {
+      const snap = await ref.get();
+      const total = asList(snap.val()).reduce((sum, row) => {
+        return sum + asList(row.colors).reduce((s, color) => s + Math.max(0, Number(color.stock || 0)), 0);
+      }, 0);
+      await window.rtdb.ref(`${window.PATHS.products}/${productId}/inventoryTotal`).set(total);
+    } catch (e) {
+      console.warn("inventoryTotal update skipped", e);
+    }
+  }
+
+  async function markOrderInventoryProcessing(orderId) {
+    const ref = window.rtdb.ref(`${window.PATHS.orders}/${orderId}/inventoryDeducted`);
+    let blocked = false;
+    await new Promise((resolve, reject) => {
+      ref.transaction(current => {
+        if (current === true || current === "processing") {
+          blocked = true;
+          return;
+        }
+        return "processing";
+      }, (error, committed) => {
+        if (error) reject(error);
+        else if (!committed && blocked) resolve(false);
+        else if (!committed) reject(new Error("تعذر قفل الطلب لخصم المخزون"));
+        else resolve(true);
+      }, false);
+    }).then(result => result);
+    return !blocked;
+  }
+
+  async function deductInventoryForOrder(orderId, order) {
+    if (order?.inventoryDeducted === true) return;
+
+    const locked = await markOrderInventoryProcessing(orderId);
+    if (!locked) return;
+
+    try {
+      const deductions = makeOrderDeductionMap(order);
+      const byProduct = new Map();
+      deductions.forEach(d => {
+        if (!byProduct.has(d.productId)) byProduct.set(d.productId, []);
+        byProduct.get(d.productId).push(d);
+      });
+
+      for (const [productId, list] of byProduct.entries()) {
+        await decrementProductInventory(productId, list);
+      }
+    } catch (e) {
+      await window.rtdb.ref(`${window.PATHS.orders}/${orderId}/inventoryDeducted`).set(false);
+      throw e;
+    }
+  }
+
   window.updateOrderStatus = async function updateOrderStatus(orderId, status) {
     safeOverlay(true);
     try {
-      await window.rtdb.ref(`${window.PATHS.orders}/${orderId}`).update({
+      const currentOrder = (window.ordersCache || []).find(o => String(o.id) === String(orderId)) || {};
+      const updates = {
         status,
         updatedAt: Date.now()
-      });
+      };
+
+      if (status === "approved" && currentOrder.inventoryDeducted !== true) {
+        await deductInventoryForOrder(orderId, currentOrder);
+        updates.inventoryDeducted = true;
+        updates.inventoryDeductedAt = Date.now();
+      }
+
+      await window.rtdb.ref(`${window.PATHS.orders}/${orderId}`).update(updates);
       await window.loadAllData();
-      safeToast("تم تحديث حالة الطلب");
+      safeToast(status === "approved" ? "تمت الموافقة وخصم المخزون" : "تم تحديث حالة الطلب");
     } catch (e) {
       console.error(e);
-      safeToast("فشل تحديث حالة الطلب");
+      safeToast(e?.message || "فشل تحديث حالة الطلب");
     } finally {
       safeOverlay(false);
     }

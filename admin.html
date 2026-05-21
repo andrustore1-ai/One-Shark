@@ -435,6 +435,34 @@
       padding:18px;
       background:#fbfdff;
     }
+
+    .variant-stock-card{
+      border:1px solid #e7eef4;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      border-radius:24px;
+      padding:16px;
+      box-shadow:0 12px 26px rgba(15,23,42,.05);
+    }
+    .variant-stock-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;
+    }
+    .variant-stock-size{
+      display:inline-flex;align-items:center;gap:8px;background:#111827;color:#fff;
+      border-radius:999px;padding:8px 14px;font-size:13px;font-weight:900;
+    }
+    .variant-color-stock-item{
+      display:grid;grid-template-columns:44px 1fr 120px;gap:12px;align-items:center;
+      border:1px solid #edf2f7;background:#fff;border-radius:20px;padding:12px;
+    }
+    .variant-color-dot{
+      width:34px;height:34px;border-radius:999px;border:2px solid #fff;box-shadow:0 0 0 1px #d8e1e8;background:#ccc;
+    }
+    .variant-stock-input{
+      width:100%;border:1px solid #dfe7ee;border-radius:16px;padding:11px 10px;font-weight:900;text-align:center;background:#f8fafc;
+    }
+    .variant-stock-input:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(20,69,77,.08)}
+    .stock-empty-note{border:1px dashed #d8e1e8;background:#f8fafc;border-radius:20px;padding:16px;color:#64748b;font-size:13px;font-weight:900;line-height:1.8}
+
   </style>
 </head>
 <body>
@@ -891,11 +919,11 @@
               </div>
 
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3" id="productSizesDefaults">
-                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="S"><span class="font-black text-sm">S</span></label>
-                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="M"><span class="font-black text-sm">M</span></label>
-                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="L"><span class="font-black text-sm">L</span></label>
-                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="XL"><span class="font-black text-sm">XL</span></label>
-                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="XXL"><span class="font-black text-sm">XXL</span></label>
+                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="S" onchange="collectProductSizes(); renderProductVariantStockBuilder();"><span class="font-black text-sm">S</span></label>
+                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="M" onchange="collectProductSizes(); renderProductVariantStockBuilder();"><span class="font-black text-sm">M</span></label>
+                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="L" onchange="collectProductSizes(); renderProductVariantStockBuilder();"><span class="font-black text-sm">L</span></label>
+                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="XL" onchange="collectProductSizes(); renderProductVariantStockBuilder();"><span class="font-black text-sm">XL</span></label>
+                <label class="mini-card flex items-center gap-2 cursor-pointer"><input type="checkbox" class="product-size-check accent-[#14454d]" value="XXL" onchange="collectProductSizes(); renderProductVariantStockBuilder();"><span class="font-black text-sm">XXL</span></label>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
@@ -906,10 +934,22 @@
               <div id="productCustomSizesWrap" class="flex flex-wrap gap-2 mt-3"></div>
             </div>
 
+            <div class="mb-5">
+              <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                <div>
+                  <label class="label !mb-0">مخزون المقاسات والألوان</label>
+                  <div class="hint mt-1">كل مقاس له ألوان خاصة، وكل لون له مخزون مستقل. مثال: مقاس M / لون أسود / 100 حبة.</div>
+                </div>
+                <button type="button" class="btn btn-info" onclick="renderProductVariantStockBuilder()">تحديث جدول المخزون</button>
+              </div>
+              <div id="variantStockBuilder" class="space-y-4"></div>
+            </div>
+
             <div class="hidden">
               <textarea id="productColorOptions"></textarea>
               <textarea id="productExtraImages"></textarea>
               <textarea id="productSizes"></textarea>
+              <textarea id="productVariantMatrix"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-3 mb-4">

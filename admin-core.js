@@ -4,6 +4,7 @@
 
   const $ = (id) => document.getElementById(id);
   const asArray = (v) => Array.isArray(v) ? v : [];
+  const asList = (v) => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
   const clean = (v) => String(v ?? "").trim();
 
   window.PATHS = window.ADMIN_PATHS_5546 || {
@@ -187,6 +188,8 @@
       images: asArray(v.images),
       colorOptions: asArray(v.colorOptions),
       sizes: asArray(v.sizes),
+      variantMatrix: asList(v.variantMatrix),
+      inventoryTotal: Number(v.inventoryTotal || 0),
       shippingFee: Number(v.shippingFee || 0),
       freeShipping: v.freeShipping === true,
       enableCod: v.enableCod !== false,

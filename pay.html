@@ -1139,6 +1139,12 @@
       return `${Number(v || 0).toFixed(2)} ₪`;
     }
 
+    function toList(v){
+      if(Array.isArray(v)) return v;
+      if(v && typeof v === "object") return Object.values(v);
+      return [];
+    }
+
     function escapeHtml(str){
       return String(str ?? "")
         .replaceAll("&","&amp;")
@@ -1345,6 +1351,8 @@
           images: Array.isArray(v.images) ? v.images : [],
           colorOptions: Array.isArray(v.colorOptions) ? v.colorOptions : [],
           sizes: Array.isArray(v.sizes) ? v.sizes : [],
+          variantMatrix: toList(v.variantMatrix),
+          inventoryTotal: Number(v.inventoryTotal || 0),
           shippingFee: Number(v.shippingFee || 0),
           freeShipping: v.freeShipping === true,
           enableShipping: v.enableShipping === true,
@@ -1432,17 +1440,73 @@
       }
     }
 
+    function normalizeVariantMatrixForItem(item){
+      const source = toList(item.variantMatrix);
+      if(source.length){
+        return source.map(row => ({
+          size: String(row.size || "").trim(),
+          colors: toList(row.colors).map(color => ({
+            key: String(color.key || color.id || `${color.name || "color"}|${color.code || ""}`).trim(),
+            name: String(color.name || "").trim(),
+            code: String(color.code || "#cccccc").trim(),
+            image: String(color.image || "").trim(),
+            stock: Number.isFinite(Number(color.stock)) ? Math.max(0, Number(color.stock)) : null
+          }))
+        })).filter(row => row.size && row.colors.length);
+      }
+
+      const sizes = Array.isArray(item.sizes) ? item.sizes.map(s => String(s || "").trim()).filter(Boolean) : [];
+      const colors = Array.isArray(item.colorOptions) ? item.colorOptions : [];
+      if(!sizes.length) return [];
+      return sizes.map(size => ({
+        size,
+        colors: (colors.length ? colors : [{ name:"", code:"#cccccc", key:"default", stock:null }]).map(color => ({
+          key: String(color.key || color.id || `${color.name || "color"}|${color.code || ""}`).trim(),
+          name: String(color.name || "").trim(),
+          code: String(color.code || "#cccccc").trim(),
+          image: Array.isArray(color.images) ? String(color.images[0] || "").trim() : String(color.image || "").trim(),
+          stock: null
+        }))
+      }));
+    }
+
     function normalizeSizesForDisplay(item){
+      const matrix = normalizeVariantMatrixForItem(item);
+      if(matrix.length) return [...new Set(matrix.map(row => row.size).filter(Boolean))];
       const sizes = Array.isArray(item.sizes) ? item.sizes : [];
       return sizes.map(s => String(s || "").trim()).filter(Boolean);
     }
 
-    function getColorPreviewImage(item, colorIndex){
-      return getDefaultProductThumb(item);
+    function getColorsForSize(item, size){
+      const matrix = normalizeVariantMatrixForItem(item);
+      const row = matrix.find(r => r.size === size) || matrix[0];
+      if(row?.colors?.length) return row.colors;
+      return Array.isArray(item.colorOptions) ? item.colorOptions.map(color => ({
+        key: String(color.key || color.id || `${color.name || "color"}|${color.code || ""}`).trim(),
+        name: String(color.name || "").trim(),
+        code: String(color.code || "#cccccc").trim(),
+        image: Array.isArray(color.images) ? String(color.images[0] || "").trim() : String(color.image || "").trim(),
+        stock: null
+      })) : [];
     }
 
-    function getColorName(item, colorIndex){
-      const colors = Array.isArray(item.colorOptions) ? item.colorOptions : [];
+    function isVariantColorAvailable(color){
+      return color.stock === null || color.stock === undefined || Number(color.stock) > 0;
+    }
+
+    function firstAvailableColorIndex(colors){
+      const idx = colors.findIndex(isVariantColorAvailable);
+      return idx >= 0 ? idx : 0;
+    }
+
+    function getColorPreviewImage(item, colorIndex){
+      const unit = getActiveUnit(item);
+      const colors = getColorsForSize(item, unit?.size || selectedSize || normalizeSizesForDisplay(item)[0] || "");
+      return colors[colorIndex]?.image || getDefaultProductThumb(item);
+    }
+
+    function getColorNameForSize(item, size, colorIndex){
+      const colors = getColorsForSize(item, size);
       return colors[colorIndex]?.name || "";
     }
 
@@ -1453,8 +1517,6 @@
 
       const sizes = normalizeSizesForDisplay(item);
       const defaultSize = sizes[0] || "";
-      const colors = Array.isArray(item.colorOptions) ? item.colorOptions : [];
-      const hasColors = colors.length > 0;
       const defaultImage = getDefaultProductThumb(item);
 
       if(!Array.isArray(item.unitSelections)) item.unitSelections = [];
@@ -1462,20 +1524,31 @@
       const next = [];
       for(let i=0; i<qty; i++){
         const prev = item.unitSelections[i] || {};
-        let colorIndex = Number.isInteger(prev.colorIndex) ? prev.colorIndex : 0;
-        if(!hasColors) colorIndex = -1;
-        if(hasColors && (colorIndex < 0 || colorIndex >= colors.length)) colorIndex = 0;
-
-        let size = prev.size || "";
+        let size = prev.size || defaultSize;
         if(sizes.length && !sizes.includes(size)) size = defaultSize;
         if(!sizes.length) size = "";
 
+        const colors = getColorsForSize(item, size);
+        const hasColors = colors.length > 0;
+        let colorIndex = Number.isInteger(prev.colorIndex) ? prev.colorIndex : 0;
+        if(prev.colorKey){
+          const byKey = colors.findIndex(c => String(c.key || "") === String(prev.colorKey || ""));
+          if(byKey >= 0) colorIndex = byKey;
+        }
+        if(!hasColors) colorIndex = -1;
+        if(hasColors && (colorIndex < 0 || colorIndex >= colors.length)) colorIndex = firstAvailableColorIndex(colors);
+        if(hasColors && !isVariantColorAvailable(colors[colorIndex])) colorIndex = firstAvailableColorIndex(colors);
+
+        const color = hasColors ? colors[colorIndex] : null;
         next.push({
           pieceNo: i + 1,
           colorIndex,
-          colorName: hasColors ? getColorName(item, colorIndex) : "",
+          colorKey: color?.key || "",
+          colorCode: color?.code || "",
+          colorName: color?.name || "",
+          stock: color?.stock ?? null,
           size,
-          image: prev.image || defaultImage
+          image: color?.image || prev.image || defaultImage
         });
       }
 
@@ -1505,6 +1578,8 @@
           images: Array.isArray(db.images) ? db.images : [],
           colorOptions: Array.isArray(db.colorOptions) ? db.colorOptions : [],
           sizes: Array.isArray(db.sizes) ? db.sizes : [],
+          variantMatrix: toList(db.variantMatrix).length ? toList(db.variantMatrix) : toList(item.variantMatrix),
+          inventoryTotal: Number(db.inventoryTotal || item.inventoryTotal || 0),
           shippingFee: Number(db.shippingFee || 0),
           freeShipping: db.freeShipping === true,
           enableShipping: db.enableShipping === true,
@@ -1620,6 +1695,7 @@
       currentColorIndex = unit.colorIndex >= 0 ? unit.colorIndex : 0;
       selectedSize = unit.size || "";
 
+      renderColors(item);
       document.querySelectorAll(".color-chip").forEach((el, i) => {
         el.classList.toggle("active", i === currentColorIndex);
       });
@@ -1726,7 +1802,8 @@
     function renderColors(item){
       const wrap = document.getElementById("colorsWrap");
       const row = document.getElementById("colorsRow");
-      const colorOptions = Array.isArray(item.colorOptions) ? item.colorOptions : [];
+      const unit = getActiveUnit(item);
+      const colorOptions = getColorsForSize(item, unit?.size || selectedSize || "");
 
       if(!colorOptions.length){
         wrap.classList.add("hidden-view");
@@ -1735,12 +1812,15 @@
       }
 
       wrap.classList.remove("hidden-view");
-      row.innerHTML = colorOptions.map((color, idx) => `
-        <button type="button" onclick="selectColor(${idx})" class="color-btn">
+      row.innerHTML = colorOptions.map((color, idx) => {
+        const available = isVariantColorAvailable(color);
+        return `
+        <button type="button" onclick="selectColor(${idx})" class="color-btn ${available ? '' : 'disabled'}" ${available ? '' : 'title="غير متوفر"'}>
           <span class="color-chip ${idx===currentColorIndex?'active':''}" style="background:${escapeHtml(color.code || '#ccc')}"></span>
           <span class="color-name">${escapeHtml(color.name || tr("color"))}</span>
+          ${available ? (color.stock !== null && color.stock !== undefined ? `<span class="color-stock-note" style="color:#10b981">${Number(color.stock)} متاح</span>` : ``) : `<span class="color-stock-note">غير متوفر</span>`}
         </button>
-      `).join("");
+      `}).join("");
     }
 
     function selectColor(index){
@@ -1751,8 +1831,20 @@
       const unit = getActiveUnit(item);
       if(!unit) return;
 
+      const colors = getColorsForSize(item, unit.size || selectedSize || "");
+      const color = colors[index];
+      if(!color) return;
+      if(!isVariantColorAvailable(color)){
+        showToast(isEnglish() ? "Unavailable" : "غير متوفر");
+        return;
+      }
+
       unit.colorIndex = index;
-      unit.colorName = getColorName(item, index);
+      unit.colorKey = color.key || "";
+      unit.colorCode = color.code || "";
+      unit.colorName = color.name || "";
+      unit.stock = color.stock ?? null;
+      unit.image = color.image || getDefaultProductThumb(item);
 
       currentColorIndex = index;
 
@@ -1799,11 +1891,22 @@
 
       unit.size = size;
       selectedSize = size;
+      const colors = getColorsForSize(item, size);
+      const idx = firstAvailableColorIndex(colors);
+      const color = colors[idx];
+      unit.colorIndex = colors.length ? idx : -1;
+      unit.colorKey = color?.key || "";
+      unit.colorCode = color?.code || "";
+      unit.colorName = color?.name || "";
+      unit.stock = color?.stock ?? null;
+      unit.image = color?.image || getDefaultProductThumb(item);
+      currentColorIndex = unit.colorIndex >= 0 ? unit.colorIndex : 0;
 
       document.querySelectorAll(".size-pill").forEach(el => {
         el.classList.toggle("active", el.textContent.trim() === size);
       });
 
+      renderColors(item);
       renderUnitPieces(item);
       renderSelectedItems();
       persistCheckoutSelection();
@@ -1847,6 +1950,31 @@
             renderSelectedItems();
             return false;
           }
+        }
+      }
+
+
+      const selectedCounts = new Map();
+      for(const item of items){
+        ensureUnitSelections(item);
+        for(const unit of item.unitSelections){
+          const key = `${item.id}|${unit.size || ""}|${unit.colorKey || unit.colorName || ""}`;
+          const current = selectedCounts.get(key) || { count:0, stock: unit.stock, item, unit };
+          current.count += 1;
+          current.stock = unit.stock;
+          selectedCounts.set(key, current);
+
+          if(unit.stock !== null && unit.stock !== undefined && Number(unit.stock) <= 0){
+            showToast(`${getLocalizedProductName(item)} - ${unit.size || ""} - ${unit.colorName || ""}: ${isEnglish() ? "Unavailable" : "غير متوفر"}`);
+            return false;
+          }
+        }
+      }
+
+      for(const entry of selectedCounts.values()){
+        if(entry.stock !== null && entry.stock !== undefined && entry.count > Number(entry.stock)){
+          showToast(`${getLocalizedProductName(entry.item)} - ${entry.unit.size || ""} - ${entry.unit.colorName || ""}: المتاح ${entry.stock} والمطلوب ${entry.count}`);
+          return false;
         }
       }
 
@@ -2329,10 +2457,14 @@
               images: item.images || [],
               colorOptions: item.colorOptions || [],
               sizes: item.sizes || [],
+              variantMatrix: item.variantMatrix || [],
               unitSelections: item.unitSelections.map(unit => ({
                 pieceNo: unit.pieceNo,
                 colorIndex: unit.colorIndex,
+                colorKey: unit.colorKey || "",
+                colorCode: unit.colorCode || "",
                 colorName: unit.colorName || "",
+                stockAtOrder: unit.stock ?? null,
                 size: unit.size || "",
                 image: unit.image || ""
               }))

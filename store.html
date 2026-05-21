@@ -1967,6 +1967,12 @@
 
     function money(v){ return `${Number(v || 0).toFixed(2)} ₪`; }
 
+    function toList(v){
+      if(Array.isArray(v)) return v;
+      if(v && typeof v === "object") return Object.values(v);
+      return [];
+    }
+
     function escapeHtml(str){
       return String(str ?? "")
         .replaceAll("&","&amp;")
@@ -2007,6 +2013,9 @@
         image2: v.image2 || "",
         images: Array.isArray(v.images) ? v.images : [],
         colorOptions: Array.isArray(v.colorOptions) ? v.colorOptions : [],
+        sizes: Array.isArray(v.sizes) ? v.sizes : [],
+        variantMatrix: toList(v.variantMatrix),
+        inventoryTotal: Number(v.inventoryTotal || 0),
         order: Number(v.order || 0),
         enabled: v.enabled !== false,
         createdAt: Number(v.createdAt || 0)
@@ -2479,6 +2488,12 @@
       return Math.round(((o - p) / o) * 100);
     }
 
+    function getProductStockTotal(product){
+      const matrix = toList(product.variantMatrix);
+      if(!matrix.length) return null;
+      return matrix.reduce((sum, row) => sum + toList(row.colors).reduce((s, color) => s + Math.max(0, Number(color.stock || 0)), 0), 0);
+    }
+
     function getCategoryIconSvg(icon){
       const icons = {
         home: `<svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>`,
@@ -2873,6 +2888,8 @@
     function openProductPay(productId){
       const p = products.find(x => x.id === productId);
       if(!p) return;
+      const stockTotal = getProductStockTotal(p);
+      if(stockTotal !== null && stockTotal <= 0){ showToast('غير متوفر'); return; }
 
       sessionStorage.setItem(LOCAL_KEYS.checkoutSelection, JSON.stringify({
         source: "buy_now",
@@ -2889,6 +2906,8 @@
           enableCod: p.enableCod !== false,
           image1: p.image1,
           image2: p.image2,
+          variantMatrix: p.variantMatrix || [],
+          inventoryTotal: Number(p.inventoryTotal || 0),
           qty: 1
         }]
       }));
@@ -2900,6 +2919,8 @@
       const inWish = wishlist.includes(p.id);
       const displayImages = getProductDisplayImages(p);
       const discount = getDiscountPercent(p.price, p.oldPrice);
+      const stockTotal = getProductStockTotal(p);
+      const outOfStock = stockTotal !== null && stockTotal <= 0;
 
       return `
         <div id="product-card-${p.id}" class="product-card reveal-card" onclick="openProductPay('${p.id}')">
@@ -2907,6 +2928,7 @@
             <div class="product-image-loader"></div>
 
             ${discount > 0 ? `<div class="discount-badge">${discount}% -</div>` : ""}
+            ${outOfStock ? `<div class="discount-badge" style="left:12px;right:auto;background:#ef4444">غير متوفر</div>` : ""}
 
             <img
               data-src="${escapeHtml(displayImages.image1)}"
@@ -2947,7 +2969,7 @@
               ${p.oldPrice > p.price ? `<span class="price-note">بعد الخصم</span>` : ``}
             </div>
 
-            <button onclick="event.stopPropagation(); addToCart('${p.id}')" class="hollow-cart-btn">
+            <button onclick="event.stopPropagation(); ${outOfStock ? `showToast('غير متوفر')` : `addToCart('${p.id}')`}" class="hollow-cart-btn" ${outOfStock ? 'disabled style="opacity:.55;cursor:not-allowed"' : ''}>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
@@ -3255,6 +3277,8 @@
     function addToCart(productId){
       const p = products.find(x => x.id === productId);
       if(!p) return;
+      const stockTotal = getProductStockTotal(p);
+      if(stockTotal !== null && stockTotal <= 0){ showToast('غير متوفر'); return; }
 
       const existing = cart.find(i => i.id === p.id);
       if(existing){
@@ -3270,6 +3294,8 @@
           image2: p.image2,
           homeSection: getProductHomeSection(p),
           enableCod: p.enableCod !== false,
+          variantMatrix: p.variantMatrix || [],
+          inventoryTotal: Number(p.inventoryTotal || 0),
           selected: true,
           qty: 1
         });
