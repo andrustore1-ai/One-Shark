@@ -12,6 +12,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
   <script src="firebase-config.js"></script>
 
   <style>
@@ -464,6 +465,17 @@
     .stock-empty-note{border:1px dashed #d8e1e8;background:#f8fafc;border-radius:20px;padding:16px;color:#64748b;font-size:13px;font-weight:900;line-height:1.8}
 
   </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14454d">
+  <meta name="application-name" content="المتجر">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="المتجر">
+  <link rel="icon" href="app-icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon-192.png">
+  <script defer src="pwa-register.js"></script>
 </head>
 <body>
 
@@ -544,6 +556,8 @@
           </div>
 
           <div class="flex items-center gap-2">
+            <button class="btn btn-success" onclick="enableAdminNotificationsNow()">تفعيل إشعارات Firebase</button>
+            <button class="btn btn-info" onclick="window.open('cashier-keys-admin.html','_blank')">مفاتيح الكاشير</button>
             <button class="btn btn-secondary" onclick="window.open('index.html','_blank')">فتح المتجر</button>
             <button class="btn btn-danger" onclick="logoutAdmin()">خروج</button>
           </div>
@@ -669,6 +683,16 @@
             <div>
               <label class="label">رسالة واتساب الافتراضية</label>
               <input id="storeWhatsappMessage" class="field" placeholder="مرحباً، أريد الاستفسار عن المنتجات">
+            </div>
+            <div class="md:col-span-2">
+              <label class="label">مفتاح إشعارات Web Push - اختياري</label>
+              <input id="storeFcmVapidKey" class="field" placeholder="اكتب VAPID Key من Firebase Cloud Messaging لتفعيل إشعارات الخلفية">
+              <div class="hint">الإشعارات داخل لوحة الأدمن تعمل بدون هذا المفتاح عند فتح اللوحة. إشعارات الخلفية عبر FCM تحتاج هذا المفتاح مع Cloud Function مرفق.</div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="label">مفتاح كاشير المحل لربط المخزون</label>
+              <input id="storeCashierLicenseKey" class="field" placeholder="الصق مفتاح الكاشير هنا حتى يتم ربط مخزون المتجر بالكاشير">
+              <div class="hint">كل مفتاح كاشير له مخزون وفواتير خاصة به. اربط المنتج من خلال خانة باركود الكاشير داخل المنتج.</div>
             </div>
           </div>
 
@@ -875,6 +899,14 @@
                 <option value="casual">ملابس كاجوال</option>
               </select>
               <div class="hint">اختَر أين سيظهر المنتج: واجهة الملابس الرياضية أو واجهة الملابس الكاجوال.</div>
+            </div>
+            <div class="mb-4">
+              <label class="label">باركود المنتج في الكاشير</label>
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <input id="productBarcode" class="field" placeholder="الصق رمز الباركود الموجود في الكاشير لهذا المنتج">
+                <button type="button" class="btn btn-info" onclick="window.importCashierProductToStoreForm && window.importCashierProductToStoreForm(document.getElementById('productBarcode').value)">جلب من الكاشير</button>
+              </div>
+              <div id="cashierBarcodeSyncStatus" class="hint mt-2">بمجرد وضع الباركود يتم جلب المقاسات والألوان والمخزون من الكاشير تلقائيًا.</div>
             </div>
             <div class="mb-4"><label class="label">اسم المنتج بالعربي</label><input id="productNameAr" class="field" placeholder="مثال: حذاء رياضي"></div>
             <div class="mb-4"><label class="label">اسم المنتج بالإنجليزي</label><input id="productNameEn" class="field" placeholder="Example: Sport Shoes"></div>
@@ -1242,18 +1274,22 @@
     window.rtdb = firebase.database();
 
     window.ADMIN_PATHS_5546 = {
-      admin: "settings83c80/admin83c80",
+      admin: "settingsMohanad/adminMohanad",
       store: FIREBASE_PATHS_5546.settingsStore,
       banners: FIREBASE_PATHS_5546.settingsBanners,
       categories: FIREBASE_PATHS_5546.categories,
       products: FIREBASE_PATHS_5546.products,
       paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
       orders: FIREBASE_PATHS_5546.orders,
-      menuItems: "settings83c80/sidebarMenu83c80",
-      pageSections: "settings83c80/pageSections83c80",
-      shippingZones: "settings83c80/shippingZones83c80",
-      globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
-      socialLinks: "settings83c80/socialLinks83c80"
+      adminNotifications: "settingsMohanad/adminNotificationsMohanad",
+      adminPushTokens: "settingsMohanad/adminPushTokensMohanad",
+      menuItems: "settingsMohanad/sidebarMenuMohanad",
+      pageSections: "settingsMohanad/pageSectionsMohanad",
+      shippingZones: "settingsMohanad/shippingZonesMohanad",
+      globalCheckoutFields: "settingsMohanad/globalCheckoutFieldsMohanad",
+      socialLinks: "settingsMohanad/socialLinksMohanad",
+      cashierClients: "DFDFG_clients",
+      cashierLinks: "settingsMohanad/cashierLinksMohanad"
     };
 
     window.DEFAULT_ADMIN_5546 = {
@@ -1298,5 +1334,6 @@
 
   <script src="admin-core.js"></script>
   <script src="admin2.js"></script>
+  <script src="store-cashier-sync-stockpath.js?v=20260528_invoice1"></script>
 </body>
 </html>

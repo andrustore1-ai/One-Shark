@@ -8,22 +8,24 @@
   const clean = (v) => String(v ?? "").trim();
 
   window.PATHS = window.ADMIN_PATHS_5546 || {
-    admin: "settings83c80/admin83c80",
+    admin: "settingsMohanad/adminMohanad",
     store: FIREBASE_PATHS_5546.settingsStore,
     banners: FIREBASE_PATHS_5546.settingsBanners,
     categories: FIREBASE_PATHS_5546.categories,
     products: FIREBASE_PATHS_5546.products,
     paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
     orders: FIREBASE_PATHS_5546.orders,
-    menuItems: "settings83c80/sidebarMenu83c80",
-    pageSections: "settings83c80/pageSections83c80",
-    shippingZones: "settings83c80/shippingZones83c80",
-    globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
-    socialLinks: "settings83c80/socialLinks83c80"
+    adminNotifications: FIREBASE_PATHS_5546.adminNotifications || "settingsMohanad/adminNotificationsMohanad",
+    adminPushTokens: "settingsMohanad/adminPushTokensMohanad",
+    menuItems: "settingsMohanad/sidebarMenuMohanad",
+    pageSections: "settingsMohanad/pageSectionsMohanad",
+    shippingZones: "settingsMohanad/shippingZonesMohanad",
+    globalCheckoutFields: "settingsMohanad/globalCheckoutFieldsMohanad",
+    socialLinks: "settingsMohanad/socialLinksMohanad"
   };
   window.KNOWN_COLORS = window.KNOWN_COLORS_5546 || [];
 
-  const ADMIN_SESSION_KEY = "store83c80_admin_session";
+  const ADMIN_SESSION_KEY = "storeMohanad_admin_session";
   const HOME_SECTIONS = [
     { id: "sports", ar: "ملابس رياضية", en: "Sportswear" },
     { id: "casual", ar: "ملابس كاجوال", en: "Casual Wear" }
@@ -310,8 +312,9 @@
       }
       setScreen(true);
       await loadAllData();
-      requestOrderNotificationPermission();
+      await enableFirebaseMessagingToken();
       startOrderNotifications();
+      handleAdminDeepLink();
       toast("تم تسجيل الدخول");
     }catch(e){
       console.error(e);
@@ -461,6 +464,8 @@
     if($("storeWhatsappEnabled")) $("storeWhatsappEnabled").value = s.whatsappEnabled === false ? "false" : "true";
     if($("storeWhatsappNumber")) $("storeWhatsappNumber").value = s.whatsappNumber || "";
     if($("storeWhatsappMessage")) $("storeWhatsappMessage").value = s.whatsappMessage || "مرحباً، أريد الاستفسار عن المنتجات";
+    if($("storeFcmVapidKey")) $("storeFcmVapidKey").value = s.fcmVapidKey || window.FCM_VAPID_KEY_5546 || "";
+    if($("storeCashierLicenseKey")) $("storeCashierLicenseKey").value = s.cashierLicenseKey || "";
     fillSectionSettingsForm("sports");
     fillSectionSettingsForm("casual");
   }
@@ -494,6 +499,8 @@
       whatsappEnabled: $("storeWhatsappEnabled")?.value !== "false",
       whatsappNumber: clean($("storeWhatsappNumber")?.value).replace(/[^0-9]/g, ""),
       whatsappMessage: clean($("storeWhatsappMessage")?.value) || "مرحباً، أريد الاستفسار عن المنتجات",
+      fcmVapidKey: clean($("storeFcmVapidKey")?.value),
+      cashierLicenseKey: clean($("storeCashierLicenseKey")?.value),
       sectionSettings: {
         sports: collectSectionSettingsForm("sports"),
         casual: collectSectionSettingsForm("casual")
@@ -983,9 +990,15 @@
   let orderNotificationRef = null;
   let orderNotificationHandler = null;
   let knownOrderIdsForNotification = new Set();
+  let knownFirebaseNotificationIds = new Set();
+  let foregroundMessagingAttached = false;
 
   function isAdminSessionActive(){
     return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
+  }
+
+  function isSecureNotificationContext(){
+    return window.isSecureContext === true || location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
   }
 
   function stopOrderNotifications(){
@@ -999,12 +1012,19 @@
     orderNotificationStarted = false;
   }
 
-  function requestOrderNotificationPermission(){
-    if(!isAdminSessionActive()) return;
-    if(typeof Notification === "undefined") return;
-    if(Notification.permission === "default"){
-      try{ Notification.requestPermission(); }catch(e){}
-    }
+  function requestNotificationPermissionFromClick(){
+    if(typeof Notification === "undefined") return Promise.resolve("unsupported");
+    if(Notification.permission !== "default") return Promise.resolve(Notification.permission);
+    return new Promise(resolve => {
+      try{
+        const result = Notification.requestPermission(value => resolve(value || Notification.permission));
+        if(result && typeof result.then === "function"){
+          result.then(value => resolve(value || Notification.permission)).catch(() => resolve(Notification.permission));
+        }
+      }catch(e){
+        resolve(Notification.permission || "denied");
+      }
+    });
   }
 
   function playOrderBeep(){
@@ -1026,38 +1046,209 @@
     }catch(e){}
   }
 
-  function fireOrderNotification(orderId, order){
-    if(!isAdminSessionActive()) return;
-    const title = "طلب جديد في المتجر";
-    const body = `${order?.name || order?.customerName || "زبون"} - ${order?.pricing?.displayTotal || order?.displayAmount || ""}`;
-    toast(title);
-    playOrderBeep();
-    if(typeof Notification !== "undefined" && Notification.permission === "granted"){
-      try{
-        const n = new Notification(title, { body, tag: `order-${orderId}` });
-        n.onclick = () => { window.focus(); setTab("orders"); };
-      }catch(e){}
+  function buildOrderAdminUrl(orderId){
+    const url = new URL("admin.html", window.location.href);
+    url.searchParams.set("tab", "orders");
+    if(orderId) url.searchParams.set("order", String(orderId));
+    return url.href;
+  }
+
+  function openOrderDetails(orderId){
+    try{
+      if(typeof setTab === "function") setTab("orders");
+      if(typeof window.setOrdersFilter === "function") window.setOrdersFilter("all");
+      const target = String(orderId || new URLSearchParams(location.search).get("order") || "");
+      if(!target) return;
+      setTimeout(() => {
+        const details = document.getElementById(`order-details-${target}`);
+        if(details){
+          details.classList.add("open");
+          details.scrollIntoView({ behavior:"smooth", block:"center" });
+          const row = details.closest(".order-summary-row");
+          if(row){
+            row.style.boxShadow = "0 0 0 4px rgba(243,112,33,.18)";
+            row.style.borderColor = "#f37021";
+            setTimeout(() => { row.style.boxShadow = ""; row.style.borderColor = ""; }, 2600);
+          }
+        }
+      }, 220);
+    }catch(e){ console.warn("openOrderDetails failed", e); }
+  }
+  window.openOrderDetails = openOrderDetails;
+
+  function handleAdminDeepLink(){
+    try{
+      const params = new URLSearchParams(location.search);
+      const tab = params.get("tab");
+      const orderId = params.get("order");
+      if(tab && typeof setTab === "function") setTab(tab);
+      if(orderId) openOrderDetails(orderId);
+    }catch(e){}
+  }
+
+  async function ensureMessagingServiceWorker(){
+    if(!navigator.serviceWorker || !isSecureNotificationContext()) return null;
+    const reg = await navigator.serviceWorker.register("firebase-messaging-sw.js", { scope:"./" });
+    window.storeServiceWorkerRegistration = reg;
+    try{ await navigator.serviceWorker.ready; }catch(e){}
+    return reg;
+  }
+
+  async function showServiceWorkerNotification(title, options){
+    if(!isAdminSessionActive()) return false;
+    if(typeof Notification === "undefined" || Notification.permission !== "granted") return false;
+    const payload = {
+      body: options?.body || "",
+      icon: options?.icon || "app-icon-192.png",
+      badge: options?.badge || "app-icon-192.png",
+      tag: options?.tag || `store-order-${Date.now()}`,
+      renotify: true,
+      requireInteraction: true,
+      data: options?.data || {}
+    };
+    try{
+      const reg = await ensureMessagingServiceWorker();
+      if(reg?.showNotification){
+        await reg.showNotification(title, payload);
+        return true;
+      }
+    }catch(e){}
+    try{
+      const n = new Notification(title, payload);
+      n.onclick = () => {
+        const url = payload?.data?.url || buildOrderAdminUrl(payload?.data?.orderId || "");
+        window.focus();
+        if(payload?.data?.orderId) openOrderDetails(payload.data.orderId);
+        else window.location.href = url;
+      };
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function getFcmVapidKey(){
+    const s = window.storeCache || {};
+    return clean(s.fcmVapidKey || window.FCM_VAPID_KEY_5546 || "");
+  }
+
+  function attachForegroundFirebaseMessages(messaging){
+    if(foregroundMessagingAttached || !messaging || typeof messaging.onMessage !== "function") return;
+    foregroundMessagingAttached = true;
+    messaging.onMessage(payload => {
+      const data = payload.data || {};
+      const orderId = data.orderId || data.order_id || "";
+      const title = payload.notification?.title || data.title || "طلب جديد في المتجر";
+      const body = payload.notification?.body || data.body || "اضغط لعرض الطلب";
+      const url = data.url || data.link || data.click_action || buildOrderAdminUrl(orderId);
+      toast(title);
+      playOrderBeep();
+      showServiceWorkerNotification(title, { body, tag: orderId ? `order-${orderId}` : "store-order", data:{ url, orderId } });
+      if(orderId) setTimeout(() => openOrderDetails(orderId), 300);
+    });
+  }
+
+  async function enableFirebaseMessagingToken(showMessages){
+    if(!isAdminSessionActive()) return false;
+    if(typeof Notification === "undefined" || Notification.permission !== "granted") return false;
+    if(!isSecureNotificationContext()) return false;
+    if(!window.firebase || typeof firebase.messaging !== "function") return false;
+
+    const vapidKey = getFcmVapidKey();
+    if(!vapidKey){
+      if(showMessages) toast("تم السماح للإشعارات، لكن إشعارات Firebase بالخلفية تحتاج VAPID Key من إعدادات Firebase Cloud Messaging");
+      return false;
+    }
+
+    try{
+      const registration = await ensureMessagingServiceWorker();
+      const messaging = firebase.messaging();
+      const token = await messaging.getToken({ vapidKey, serviceWorkerRegistration: registration });
+      if(!token){
+        if(showMessages) toast("لم يتم إنشاء Firebase Token. تأكد من VAPID Key");
+        return false;
+      }
+      const tokenKey = token.replace(/[.#$\[\]/]/g, "_");
+      await window.rtdb.ref(`${window.PATHS.adminPushTokens || "settingsMohanad/adminPushTokensMohanad"}/${tokenKey}`).update({
+        token,
+        enabled: true,
+        platform: "web",
+        userAgent: navigator.userAgent || "",
+        standalone: window.matchMedia?.("(display-mode: standalone)")?.matches || navigator.standalone === true,
+        updatedAt: Date.now()
+      });
+      attachForegroundFirebaseMessages(messaging);
+      if(showMessages) toast("تم ربط إشعارات Firebase بنجاح");
+      return true;
+    }catch(e){
+      console.warn("FCM token registration skipped", e);
+      if(showMessages) toast("تعذر ربط Firebase Messaging. تأكد من VAPID Key وأن الموقع يعمل على HTTPS");
+      return false;
     }
   }
 
-  function startOrderNotifications(){
-    if(!isAdminSessionActive() || orderNotificationStarted || !window.rtdb || !window.PATHS?.orders) return;
+  window.enableAdminNotificationsNow = async function enableAdminNotificationsNow(){
+    if(!isAdminSessionActive()){ toast("سجل دخول الأدمن أولاً"); return; }
+    try{
+      if(!isSecureNotificationContext()){ toast("الإشعارات تحتاج فتح الموقع من رابط HTTPS وليس ملف مباشر"); return; }
+      if(typeof Notification === "undefined") { toast("المتصفح لا يدعم الإشعارات"); return; }
+      if(Notification.permission === "denied"){
+        toast("الإشعارات محظورة من إعدادات المتصفح. افتح إعدادات الموقع ثم فعّل Notifications = Allow");
+        return;
+      }
+
+      const permission = await requestNotificationPermissionFromClick();
+      if(permission !== "granted"){
+        toast("لم يتم السماح بالإشعارات. اضغط سماح عند ظهور نافذة المتصفح");
+        return;
+      }
+
+      await ensureMessagingServiceWorker();
+      await enableFirebaseMessagingToken(true);
+      startOrderNotifications();
+      await showServiceWorkerNotification("تم تفعيل إشعارات الطلبات", {
+        body: "أي طلب جديد سيظهر هنا ويفتح صفحة الطلب عند الضغط.",
+        tag: "notifications-enabled",
+        data: { url: buildOrderAdminUrl("") }
+      });
+      toast("تم تفعيل إشعارات الطلبات");
+    }catch(e){ console.error(e); toast("تعذر تفعيل الإشعارات"); }
+  };
+
+  function fireOrderNotification(orderId, order){
+    if(!isAdminSessionActive()) return;
+    const title = order?.title || "طلب جديد في المتجر";
+    const body = order?.body || `${order?.name || order?.customerName || "زبون"} - ${order?.pricing?.displayTotal || order?.displayAmount || order?.total || ""}`;
+    const url = order?.url || buildOrderAdminUrl(orderId);
+    toast(title);
+    playOrderBeep();
+    showServiceWorkerNotification(title, {
+      body,
+      tag: `order-${orderId}`,
+      data: { url, orderId: String(orderId || "") }
+    });
+  }
+
+  async function startOrderNotifications(){
+    if(!isAdminSessionActive() || orderNotificationStarted || !window.rtdb) return;
     orderNotificationStarted = true;
-    knownOrderIdsForNotification = new Set((window.ordersCache || []).map(o => String(o.id)));
-    orderNotificationRef = window.rtdb.ref(window.PATHS.orders).limitToLast(25);
+    const notificationsPath = window.PATHS?.adminNotifications || "settingsMohanad/adminNotificationsMohanad";
+    orderNotificationRef = window.rtdb.ref(notificationsPath).limitToLast(50);
+    try{
+      const existing = await orderNotificationRef.get();
+      existing.forEach(child => knownFirebaseNotificationIds.add(String(child.key || "")));
+    }catch(e){}
     orderNotificationHandler = snap => {
       if(!isAdminSessionActive()){
         stopOrderNotifications();
         return;
       }
-      const id = String(snap.key || "");
-      const order = snap.val() || {};
-      if(!id) return;
-      if(knownOrderIdsForNotification.has(id)){
-        return;
-      }
-      knownOrderIdsForNotification.add(id);
-      fireOrderNotification(id, order);
+      const notificationId = String(snap.key || "");
+      const data = snap.val() || {};
+      if(!notificationId || knownFirebaseNotificationIds.has(notificationId)) return;
+      knownFirebaseNotificationIds.add(notificationId);
+      const orderId = String(data.orderId || data.order_id || "");
+      if(orderId && knownOrderIdsForNotification.has(orderId)) return;
+      if(orderId) knownOrderIdsForNotification.add(orderId);
+      fireOrderNotification(orderId, data);
       setTimeout(() => {
         if(isAdminSessionActive()) loadAllData();
       }, 400);
@@ -1075,7 +1266,7 @@
     renderCheckoutFieldsBuilder([]);
     if(sessionStorage.getItem(ADMIN_SESSION_KEY) === "1"){
       setScreen(true);
-      loadAllData().then(() => startOrderNotifications());
+      loadAllData().then(() => { enableFirebaseMessagingToken(); startOrderNotifications(); handleAdminDeepLink(); });
     }else{
       setScreen(false);
     }

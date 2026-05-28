@@ -1,0 +1,71 @@
+{
+  "id": "./index.html",
+  "name": "المتجر",
+  "short_name": "المتجر",
+  "description": "تطبيق متجر احترافي قابل للتثبيت والعمل كتطبيق مستقل.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#14454d",
+  "background_color": "#071018",
+  "prefer_related_applications": false,
+  "categories": [
+    "shopping",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "./app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "لوحة الأدمن",
+      "short_name": "الأدمن",
+      "url": "./admin.html",
+      "icons": [
+        {
+          "src": "./app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "الطلبات",
+      "short_name": "الطلبات",
+      "url": "./admin.html?tab=orders",
+      "icons": [
+        {
+          "src": "./app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "المتجر",
+      "short_name": "المتجر",
+      "url": "./store.html",
+      "icons": [
+        {
+          "src": "./app-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -224,6 +224,17 @@
       to{opacity:1;transform:translateY(0)}
     }
   </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14454d">
+  <meta name="application-name" content="المتجر">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="المتجر">
+  <link rel="icon" href="app-icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon-192.png">
+  <script defer src="pwa-register.js"></script>
 </head>
 <body>
 
@@ -328,7 +339,7 @@
     const fallbackLogo = "";
 
     const LOCAL_KEYS = {
-      lang: "store83c80_lang"
+      lang: "storeMohanad_lang"
     };
 
     const i18n = {
@@ -653,9 +664,9 @@ applyStoreLogo(storeSettings.storeLogoUrl);
         showToast(tr("loginSuccess"));
 
         setTimeout(() => {
-          const redirect = sessionStorage.getItem("login_redirect_83c80");
+          const redirect = sessionStorage.getItem("login_redirect_mohanad");
           if(redirect){
-            sessionStorage.removeItem("login_redirect_83c80");
+            sessionStorage.removeItem("login_redirect_mohanad");
             window.location.href = redirect;
           }else{
             window.location.href = "index.html";
@@ -725,9 +736,9 @@ applyStoreLogo(storeSettings.storeLogoUrl);
         showToast(tr("registerSuccess"));
 
         setTimeout(() => {
-          const redirect = sessionStorage.getItem("login_redirect_83c80");
+          const redirect = sessionStorage.getItem("login_redirect_mohanad");
           if(redirect){
-            sessionStorage.removeItem("login_redirect_83c80");
+            sessionStorage.removeItem("login_redirect_mohanad");
             window.location.href = redirect;
           }else{
             window.location.href = "index.html";
@@ -788,9 +799,9 @@ applyStoreLogo(storeSettings.storeLogoUrl);
 
         auth5546.onAuthStateChanged((user) => {
           if(user){
-            const redirect = sessionStorage.getItem("login_redirect_83c80");
+            const redirect = sessionStorage.getItem("login_redirect_mohanad");
             if(redirect){
-              sessionStorage.removeItem("login_redirect_83c80");
+              sessionStorage.removeItem("login_redirect_mohanad");
               window.location.href = redirect;
             }
           }

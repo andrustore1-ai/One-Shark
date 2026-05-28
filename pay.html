@@ -416,6 +416,17 @@
       .piece-thumb,.selected-item-thumb{width:64px;height:64px;flex-basis:64px}
     }
   </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14454d">
+  <meta name="application-name" content="المتجر">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="المتجر">
+  <link rel="icon" href="app-icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon-192.png">
+  <script defer src="pwa-register.js"></script>
 </head>
 <body>
 
@@ -703,19 +714,20 @@
       products: FIREBASE_PATHS_5546.products,
       paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
       orders: FIREBASE_PATHS_5546.orders,
-      shippingZones: "settings83c80/shippingZones83c80",
-      globalCheckoutFields: "settings83c80/globalCheckoutFields83c80",
-      users: "users83c80"
+      adminNotifications: FIREBASE_PATHS_5546.adminNotifications || "settingsMohanad/adminNotificationsMohanad",
+      shippingZones: "settingsMohanad/shippingZonesMohanad",
+      globalCheckoutFields: "settingsMohanad/globalCheckoutFieldsMohanad",
+      users: "usersMohanad"
     };
 
     const LOCAL_KEYS = {
-      checkoutSelection: "store83c80_checkout_selection"
+      checkoutSelection: "storeMohanad_checkout_selection"
     };
 
     const LANGUAGE_KEYS = [
-      "store83c80_lang",
-      "store83c80_language",
-      "language83c80",
+      "storeMohanad_lang",
+      "storeMohanad_language",
+      "languageMohanad",
       "store_language",
       "store_lang",
       "site_lang",
@@ -1311,7 +1323,7 @@
     }
 
     function goLoginPage(){
-      sessionStorage.setItem("login_redirect_83c80", "pay.html");
+      sessionStorage.setItem("login_redirect_mohanad", "pay.html");
       window.location.href = "login.html";
     }
 
@@ -1344,6 +1356,9 @@
           nameEn: v.nameEn || "",
           descAr: v.descAr || v.desc || "",
           descEn: v.descEn || "",
+          barcode: v.barcode || v.cashierBarcode || v.code || "",
+          cashierBarcode: v.cashierBarcode || v.barcode || v.code || "",
+          cashierProductId: v.cashierProductId || "",
           price: Number(v.price || 0),
           oldPrice: Number(v.oldPrice || 0),
           image1: v.image1 || v.image || v.front || "",
@@ -1364,6 +1379,64 @@
         };
       });
       return map;
+    }
+
+
+    function sanitizeCashierKey(key){
+      return String(key || "").trim().replace(/[.#$/[\]]/g, "_");
+    }
+    function normalizeCashierMatrix(product){
+      const raw = Array.isArray(product?.variantMatrix) ? product.variantMatrix : [];
+      if(raw.length){
+        return raw.map(row => ({
+          size: String(row.size || row.name || "بدون مقاس").trim() || "بدون مقاس",
+          colors: toList(row.colors).map(color => ({
+            key: String(color.key || color.id || "default"),
+            name: String(color.name || color.colorName || "لون"),
+            code: String(color.code || color.colorCode || "#cccccc"),
+            image: String(color.image || color.imageUrl || ""),
+            stock: Math.max(0, Number(color.stock ?? color.qty ?? 0))
+          }))
+        })).filter(row => row.size && row.colors.length);
+      }
+      const variants = Array.isArray(product?.variants) ? product.variants : [];
+      return variants.map(v => ({ size:String(v.name || v.size || "بدون مقاس"), colors:[{ key:"default", name:"افتراضي", code:"#cccccc", image:"", stock:Math.max(0, Number(v.qty || v.stock || 0)) }] }));
+    }
+    function cashierStockFields(product){
+      const matrix = normalizeCashierMatrix(product);
+      const colorMap = new Map();
+      matrix.forEach(row => row.colors.forEach(color => {
+        const key = color.key || `${color.name}-${color.code}`;
+        if(!colorMap.has(key)) colorMap.set(key, { key, name:color.name, code:color.code, images:color.image ? [color.image] : [] });
+      }));
+      return {
+        cashierProductId: product.id || "",
+        variantMatrix: matrix,
+        sizes: matrix.map(row => row.size),
+        colorOptions: [...colorMap.values()],
+        inventoryTotal: matrix.reduce((sum, row) => sum + row.colors.reduce((s, color) => s + Number(color.stock || 0), 0), 0)
+      };
+    }
+    async function mergeProductsMapWithCashierStock(productsMapInput, storeData){
+      const cashierKey = String(storeData?.cashierLicenseKey || "").trim();
+      if(!cashierKey || !rtdb) return productsMapInput;
+      try{
+        const snap = await rtdb.ref(`DFDFG_clients/${sanitizeCashierKey(cashierKey)}/products`).get();
+        const cashierProducts = Object.entries(snap.val() || {}).map(([id, value]) => ({ id, ...(value || {}) }));
+        const byCode = new Map();
+        cashierProducts.forEach(cp => {
+          const code = String(cp.code || cp.barcode || "").trim();
+          if(code) byCode.set(code, cp);
+        });
+        Object.values(productsMapInput).forEach(product => {
+          const code = String(product.cashierBarcode || product.barcode || "").trim();
+          const cashierProduct = code ? byCode.get(code) : null;
+          if(cashierProduct) Object.assign(product, cashierStockFields(cashierProduct));
+        });
+      }catch(error){
+        console.warn("Cashier stock merge skipped", error);
+      }
+      return productsMapInput;
     }
 
     function getCheckoutHomeSection(){
@@ -1438,6 +1511,45 @@
       }catch{
         return { source:"buy_now", items:[] };
       }
+    }
+
+    function buildCheckoutItemFromProduct(product){
+      return {
+        id: product.id,
+        nameAr: product.nameAr || product.name || "",
+        nameEn: product.nameEn || "",
+        price: Number(product.price || 0),
+        oldPrice: Number(product.oldPrice || 0),
+        barcode: product.barcode || product.cashierBarcode || "",
+        cashierBarcode: product.cashierBarcode || product.barcode || "",
+        cashierProductId: product.cashierProductId || "",
+        couponCode: product.couponCode || "",
+        couponDiscountAmount: Number(product.couponDiscountAmount || 0),
+        couponEnabled: product.couponEnabled === true,
+        homeSection: product.homeSection || "sports",
+        enableCod: product.enableCod !== false,
+        enableShipping: product.enableShipping === true,
+        image1: product.image1 || "",
+        image2: product.image2 || "",
+        images: Array.isArray(product.images) ? product.images : [],
+        colorOptions: Array.isArray(product.colorOptions) ? product.colorOptions : [],
+        sizes: Array.isArray(product.sizes) ? product.sizes : [],
+        variantMatrix: toList(product.variantMatrix),
+        inventoryTotal: Number(product.inventoryTotal || 0),
+        qty: 1
+      };
+    }
+
+    function applyProductFromUrlSelection(){
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get("product") || params.get("id") || params.get("p");
+      if(!productId || !productsMap[productId]) return false;
+      checkoutSelection = {
+        source: "product_link",
+        items: [buildCheckoutItemFromProduct(productsMap[productId])]
+      };
+      persistCheckoutSelection();
+      return true;
     }
 
     function normalizeVariantMatrixForItem(item){
@@ -1572,6 +1684,9 @@
           image1: item.image1 || db.image1 || "",
           image2: item.image2 || db.image2 || "",
           oldPrice: Number(db.oldPrice || 0),
+          barcode: item.barcode || item.cashierBarcode || db.barcode || db.cashierBarcode || "",
+          cashierBarcode: item.cashierBarcode || item.barcode || db.cashierBarcode || db.barcode || "",
+          cashierProductId: item.cashierProductId || db.cashierProductId || "",
           homeSection: item.homeSection || db.homeSection || "sports",
           descAr: db.descAr || "",
           descEn: db.descEn || "",
@@ -2447,6 +2562,9 @@
               nameEn: item.nameEn || "",
               price: Number(item.price || 0),
               qty: Number(item.qty || 1),
+              barcode: item.barcode || item.cashierBarcode || "",
+              cashierBarcode: item.cashierBarcode || item.barcode || "",
+              cashierProductId: item.cashierProductId || "",
               image1: item.image1 || "",
               image2: item.image2 || "",
               oldPrice: Number(item.oldPrice || 0),
@@ -2535,6 +2653,20 @@
           throw new Error("Order key not generated");
         }
 
+        try{
+          const notificationPath = PATHS.adminNotifications || "settingsMohanad/adminNotificationsMohanad";
+          const customerLabel = order.name || order.customerName || guestName || "زبون";
+          await rtdb.ref(notificationPath).push({
+            type: "new_order",
+            orderId,
+            title: "طلب جديد في المتجر",
+            body: `${customerLabel} - ${order.pricing.displayTotal}`,
+            url: `admin.html?tab=orders&order=${orderId}`,
+            status: "unread",
+            createdAt: Date.now()
+          });
+        }catch(e){ console.warn("Admin notification write skipped", e); }
+
         if(currentUser?.uid){
           try{
             await rtdb.ref(`${PATHS.users}/${currentUser.uid}/orders/${orderId}`).set(true);
@@ -2589,7 +2721,8 @@
         ]);
 
         storeSettings = storeSnap.val() || {};
-        productsMap = normalizeProducts(productsSnap.val() || {});
+        productsMap = await mergeProductsMapWithCashierStock(normalizeProducts(productsSnap.val() || {}), storeSettings);
+        applyProductFromUrlSelection();
         checkoutSelection.items = enrichCheckoutItems(checkoutSelection.items || []);
         persistCheckoutSelection();
         paymentMethods = normalizePaymentMethods(methodsSnap.val() || {});

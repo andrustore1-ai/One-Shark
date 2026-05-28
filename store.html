@@ -1391,6 +1391,17 @@
     }
 
   </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14454d">
+  <meta name="application-name" content="المتجر">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="المتجر">
+  <link rel="icon" href="app-icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon-192.png">
+  <script defer src="pwa-register.js"></script>
 </head>
 <body>
 
@@ -1689,17 +1700,17 @@
       banners: FIREBASE_PATHS_5546.settingsBanners,
       categories: FIREBASE_PATHS_5546.categories,
       products: FIREBASE_PATHS_5546.products,
-      pageSections: "settings83c80/pageSections83c80",
-      menuItems: "settings83c80/sidebarMenu83c80",
+      pageSections: "settingsMohanad/pageSectionsMohanad",
+      menuItems: "settingsMohanad/sidebarMenuMohanad",
       paymentMethods: FIREBASE_PATHS_5546.settingsPaymentMethods,
-      socialLinks: "settings83c80/socialLinks83c80"
+      socialLinks: "settingsMohanad/socialLinksMohanad"
     };
 
     const LOCAL_KEYS = {
-      cart: "store83c80_cart",
-      wishlist: "store83c80_wishlist",
-      checkoutSelection: "store83c80_checkout_selection",
-      lang: "store83c80_lang"
+      cart: "storeMohanad_cart",
+      wishlist: "storeMohanad_wishlist",
+      checkoutSelection: "storeMohanad_checkout_selection",
+      lang: "storeMohanad_lang"
     };
 
     const MAIN_HOME_SECTIONS = [
@@ -2004,6 +2015,9 @@
         nameEn: v.nameEn || "",
         descAr: v.descAr || v.desc || "",
         descEn: v.descEn || "",
+        barcode: v.barcode || v.cashierBarcode || v.code || "",
+        cashierBarcode: v.cashierBarcode || v.barcode || v.code || "",
+        cashierProductId: v.cashierProductId || "",
         price: Number(v.price || 0),
         oldPrice: Number(v.oldPrice || 0),
         couponCode: v.couponCode || "",
@@ -2020,6 +2034,71 @@
         enabled: v.enabled !== false,
         createdAt: Number(v.createdAt || 0)
       })).filter(p => p.enabled).sort((a,b) => (a.order - b.order) || (b.createdAt - a.createdAt));
+    }
+
+
+    function sanitizeCashierKey(key){
+      return String(key || "").trim().replace(/[.#$/[\]]/g, "_");
+    }
+
+    function normalizeCashierMatrix(product){
+      const raw = Array.isArray(product?.variantMatrix) ? product.variantMatrix : [];
+      if(raw.length){
+        return raw.map(row => ({
+          size: String(row.size || row.name || "بدون مقاس").trim() || "بدون مقاس",
+          colors: toList(row.colors).map(color => ({
+            key: String(color.key || color.id || "default"),
+            name: String(color.name || color.colorName || "لون"),
+            code: String(color.code || color.colorCode || "#cccccc"),
+            image: String(color.image || color.imageUrl || ""),
+            stock: Math.max(0, Number(color.stock ?? color.qty ?? 0))
+          }))
+        })).filter(row => row.size && row.colors.length);
+      }
+      const variants = Array.isArray(product?.variants) ? product.variants : [];
+      if(variants.length){
+        return variants.map(v => ({ size:String(v.name || v.size || "بدون مقاس"), colors:[{ key:"default", name:"افتراضي", code:"#cccccc", image:"", stock:Math.max(0, Number(v.qty || v.stock || 0)) }] }));
+      }
+      return [];
+    }
+
+    function cashierStockFields(product){
+      const matrix = normalizeCashierMatrix(product);
+      const colorMap = new Map();
+      matrix.forEach(row => row.colors.forEach(color => {
+        const key = color.key || `${color.name}-${color.code}`;
+        if(!colorMap.has(key)) colorMap.set(key, { key, name:color.name, code:color.code, images:color.image ? [color.image] : [] });
+      }));
+      return {
+        cashierProductId: product.id || "",
+        variantMatrix: matrix,
+        sizes: matrix.map(row => row.size),
+        colorOptions: [...colorMap.values()],
+        inventoryTotal: matrix.reduce((sum, row) => sum + row.colors.reduce((s, color) => s + Number(color.stock || 0), 0), 0)
+      };
+    }
+
+    async function mergeProductsWithCashierStock(productList, storeData){
+      const cashierKey = String(storeData?.cashierLicenseKey || "").trim();
+      if(!cashierKey || !rtdb5546) return productList;
+      try{
+        const snap = await rtdb5546.ref(`DFDFG_clients/${sanitizeCashierKey(cashierKey)}/products`).get();
+        const cashierProducts = Object.entries(snap.val() || {}).map(([id, value]) => ({ id, ...(value || {}) }));
+        if(!cashierProducts.length) return productList;
+        const byCode = new Map();
+        cashierProducts.forEach(cp => {
+          const code = String(cp.code || cp.barcode || "").trim();
+          if(code) byCode.set(code, cp);
+        });
+        return productList.map(product => {
+          const code = String(product.cashierBarcode || product.barcode || "").trim();
+          const cashierProduct = code ? byCode.get(code) : null;
+          return cashierProduct ? { ...product, ...cashierStockFields(cashierProduct) } : product;
+        });
+      }catch(error){
+        console.warn("Cashier stock merge skipped", error);
+        return productList;
+      }
     }
 
     function normalizeSections(raw){
@@ -2541,7 +2620,7 @@
         box.innerHTML = `
           <div class="bg-gray-50 border border-gray-100 rounded-3xl p-4">
             <div class="text-sm text-gray-500 font-bold mb-3">${t("account-login-text")}</div>
-            <button onclick="sessionStorage.setItem('login_redirect_83c80','order.html'); window.location.href='login.html'" class="w-full bg-[#14454d] text-white py-3 rounded-2xl font-black">${t("login")}</button>
+            <button onclick="sessionStorage.setItem('login_redirect_mohanad','order.html'); window.location.href='login.html'" class="w-full bg-[#14454d] text-white py-3 rounded-2xl font-black">${t("login")}</button>
           </div>
         `;
         document.getElementById("sidebarProfileText").textContent = t("account-orders-title");
@@ -2885,6 +2964,68 @@
       };
     }
 
+    let productLongPressTimer = null;
+    let productLongPressCard = null;
+
+    function getProductPaymentUrl(productId){
+      const url = new URL("pay.html", window.location.href);
+      url.searchParams.set("product", productId);
+      return url.href;
+    }
+
+    async function copyTextSmart(text){
+      try{
+        if(navigator.clipboard && window.isSecureContext){
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      }catch(e){}
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "readonly");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        ta.style.pointerEvents = "none";
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        const ok = document.execCommand("copy");
+        ta.remove();
+        return ok;
+      }catch(e){
+        return false;
+      }
+    }
+
+    async function copyAndOpenProductLink(productId){
+      const url = getProductPaymentUrl(productId);
+      await copyTextSmart(url);
+      showToast("تم نسخ رابط المنتج");
+      setTimeout(() => { window.location.href = url; }, 420);
+    }
+
+    function startProductLongPress(event, productId){
+      if(event.target.closest("button,a")) return;
+      clearProductLongPress();
+      productLongPressCard = event.currentTarget;
+      productLongPressTimer = setTimeout(() => {
+        if(productLongPressCard) productLongPressCard.dataset.longPressDone = "1";
+        copyAndOpenProductLink(productId);
+      }, 650);
+    }
+
+    function clearProductLongPress(){
+      if(productLongPressTimer){
+        clearTimeout(productLongPressTimer);
+        productLongPressTimer = null;
+      }
+    }
+
+    window.startProductLongPress = startProductLongPress;
+    window.clearProductLongPress = clearProductLongPress;
+    window.copyAndOpenProductLink = copyAndOpenProductLink;
+
     function openProductPay(productId){
       const p = products.find(x => x.id === productId);
       if(!p) return;
@@ -2899,6 +3040,9 @@
           nameEn: p.nameEn,
           price: p.price,
           oldPrice: p.oldPrice || 0,
+          barcode: p.barcode || p.cashierBarcode || "",
+          cashierBarcode: p.cashierBarcode || p.barcode || "",
+          cashierProductId: p.cashierProductId || "",
           couponCode: p.couponCode || "",
           couponDiscountAmount: Number(p.couponDiscountAmount || 0),
           couponEnabled: p.couponEnabled === true,
@@ -2923,7 +3067,7 @@
       const outOfStock = stockTotal !== null && stockTotal <= 0;
 
       return `
-        <div id="product-card-${p.id}" class="product-card reveal-card" onclick="openProductPay('${p.id}')">
+        <div id="product-card-${p.id}" class="product-card reveal-card" oncontextmenu="return false" onpointerdown="startProductLongPress(event,'${p.id}')" onpointerup="clearProductLongPress()" onpointerleave="clearProductLongPress()" onpointercancel="clearProductLongPress()" onclick="if(this.dataset.longPressDone==='1'){this.dataset.longPressDone=''; return;} openProductPay('${p.id}')">
           <div class="img-container">
             <div class="product-image-loader"></div>
 
@@ -3290,6 +3434,9 @@
           nameEn: p.nameEn,
           price: p.price,
           oldPrice: p.oldPrice || 0,
+          barcode: p.barcode || p.cashierBarcode || "",
+          cashierBarcode: p.cashierBarcode || p.barcode || "",
+          cashierProductId: p.cashierProductId || "",
           image1: p.image1,
           image2: p.image2,
           homeSection: getProductHomeSection(p),
@@ -3444,7 +3591,7 @@
       if(currentUser){
         window.location.href = "order.html";
       }else{
-        sessionStorage.setItem("login_redirect_83c80", "order.html");
+        sessionStorage.setItem("login_redirect_mohanad", "order.html");
         window.location.href = "login.html";
       }
     }
@@ -3490,7 +3637,7 @@
       reviewsLoaded = true;
 
       categories = normalizeCategories(categoriesSnap.val() || {});
-      products = normalizeProducts(productsSnap.val() || {});
+      products = await mergeProductsWithCashierStock(normalizeProducts(productsSnap.val() || {}), store);
       pageSections = normalizeSections(sectionsSnap.val() || {});
       menuItems = normalizeMenuItems(menuSnap.val() || {});
       paymentMethods = normalizePaymentMethods(methodsSnap.val() || {});

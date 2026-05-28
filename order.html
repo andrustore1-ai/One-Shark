@@ -369,6 +369,17 @@
 
     .hidden-view{display:none !important}
   </style>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#14454d">
+  <meta name="application-name" content="المتجر">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="المتجر">
+  <link rel="icon" href="app-icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon-192.png">
+  <script defer src="pwa-register.js"></script>
 </head>
 <body>
 
@@ -464,11 +475,11 @@
 
     const PATHS = {
       orders: FIREBASE_PATHS_5546.orders,
-      users: "users83c80"
+      users: "usersMohanad"
     };
 
     const LOCAL_KEYS = {
-      lang: "store83c80_lang"
+      lang: "storeMohanad_lang"
     };
 
     let lang = localStorage.getItem(LOCAL_KEYS.lang) || "ar";
@@ -704,7 +715,7 @@
     }
 
     function goLoginPage(){
-      sessionStorage.setItem("login_redirect_83c80", "order.html");
+      sessionStorage.setItem("login_redirect_mohanad", "order.html");
       window.location.href = "login.html";
     }
 

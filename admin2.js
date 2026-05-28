@@ -422,6 +422,7 @@
     const idsToClear = [
       "productEditId",
       "productNameAr",
+      "productBarcode",
       "productNameEn",
       "productDescAr",
       "productDescEn",
@@ -467,6 +468,14 @@
 
   window.saveProduct = async function saveProduct() {
     const id = safeStr(byId("productEditId")?.value);
+    const barcodeBeforeSave = safeStr(byId("productBarcode")?.value);
+    if (barcodeBeforeSave && typeof window.importCashierProductToStoreForm === "function") {
+      try {
+        await window.importCashierProductToStoreForm(barcodeBeforeSave, { silent: true });
+      } catch (e) {
+        console.warn("تعذر تحديث مخزون الكاشير قبل الحفظ", e);
+      }
+    }
     const colorOptions = collectProductColorOptions();
     const sizes = collectProductSizes();
     const variantMatrix = collectProductVariantMatrix(true);
@@ -475,6 +484,8 @@
       categoryId: safeStr(byId("productCategoryId")?.value),
       category: safeStr(byId("productCategoryId")?.value),
       homeSection: safeStr(byId("productHomeSection")?.value) || (typeof getCategoryHomeSectionById === "function" ? getCategoryHomeSectionById(safeStr(byId("productCategoryId")?.value)) : "sports"),
+      barcode: safeStr(byId("productBarcode")?.value),
+      cashierBarcode: safeStr(byId("productBarcode")?.value),
       name: safeStr(byId("productNameAr")?.value),
       nameAr: safeStr(byId("productNameAr")?.value),
       nameEn: safeStr(byId("productNameEn")?.value),
@@ -524,11 +535,17 @@
 
     safeOverlay(true);
     try {
+      let savedProductId = id;
       if (id) {
         await window.rtdb.ref(`${window.PATHS.products}/${id}`).update(payload);
       } else {
         payload.createdAt = Date.now();
-        await window.rtdb.ref(window.PATHS.products).push(payload);
+        const pushedRef = await window.rtdb.ref(window.PATHS.products).push(payload);
+        savedProductId = pushedRef.key;
+      }
+
+      if (typeof window.syncProductToCashier === "function") {
+        await window.syncProductToCashier(savedProductId, payload);
       }
 
       resetProductForm();
@@ -549,6 +566,7 @@
     if (byId("productEditId")) byId("productEditId").value = p.id;
     if (byId("productCategoryId")) byId("productCategoryId").value = p.categoryId || "";
     if (byId("productHomeSection")) byId("productHomeSection").value = p.homeSection || (typeof getCategoryHomeSectionById === "function" ? getCategoryHomeSectionById(p.categoryId) : "sports");
+    if (byId("productBarcode")) byId("productBarcode").value = p.cashierBarcode || p.barcode || p.code || "";
     if (byId("productNameAr")) byId("productNameAr").value = p.nameAr || "";
     if (byId("productNameEn")) byId("productNameEn").value = p.nameEn || "";
     if (byId("productDescAr")) byId("productDescAr").value = p.descAr || "";
@@ -604,6 +622,11 @@
     }
     if (byId("productVariantMatrix")) {
       byId("productVariantMatrix").value = JSON.stringify(asArray(p.variantMatrix), null, 2);
+    }
+
+    const linkedBarcode = safeStr(byId("productBarcode")?.value);
+    if (linkedBarcode && typeof window.importCashierProductToStoreForm === "function") {
+      window.importCashierProductToStoreForm(linkedBarcode, { silent: true }).catch(() => {});
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1274,13 +1297,18 @@
   window.updateOrderStatus = async function updateOrderStatus(orderId, status) {
     safeOverlay(true);
     try {
-      const currentOrder = (window.ordersCache || []).find(o => String(o.id) === String(orderId)) || {};
+      let currentOrder = (window.ordersCache || []).find(o => String(o.id) === String(orderId)) || {};
+      if (!getOrderProductsList(currentOrder).length) {
+        const orderSnap = await window.rtdb.ref(`${window.PATHS.orders}/${orderId}`).get();
+        if (orderSnap.exists()) currentOrder = { id: orderId, ...(orderSnap.val() || {}) };
+      }
       const updates = {
         status,
         updatedAt: Date.now()
       };
 
-      if (status === "approved" && currentOrder.inventoryDeducted !== true) {
+      const shouldDeductInventory = ["approved", "delivered"].includes(status);
+      if (shouldDeductInventory && currentOrder.inventoryDeducted !== true) {
         await deductInventoryForOrder(orderId, currentOrder);
         updates.inventoryDeducted = true;
         updates.inventoryDeductedAt = Date.now();
@@ -1288,7 +1316,7 @@
 
       await window.rtdb.ref(`${window.PATHS.orders}/${orderId}`).update(updates);
       await window.loadAllData();
-      safeToast(status === "approved" ? "تمت الموافقة وخصم المخزون" : "تم تحديث حالة الطلب");
+      safeToast(shouldDeductInventory ? "تم تحديث الطلب وخصم المخزون" : "تم تحديث حالة الطلب");
     } catch (e) {
       console.error(e);
       safeToast(e?.message || "فشل تحديث حالة الطلب");
@@ -1525,7 +1553,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `store83c80-backup-${Date.now()}.json`;
+      a.download = `storeMohanad-backup-${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();

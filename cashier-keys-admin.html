@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أدمن مفاتيح الكاشير</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    :root{--primary:#14454d;--accent:#f37021;--bg:#f6f8fb;--danger:#dc2626;--ok:#16a34a;--warn:#d97706;}
+    *{box-sizing:border-box}
+    body{font-family:'Cairo',sans-serif;background:radial-gradient(circle at top left,rgba(243,112,33,.10),transparent 28%),linear-gradient(180deg,#f8fafc 0%,#eef3f7 100%);color:#0f172a;min-height:100vh;-webkit-tap-highlight-color:transparent;}
+    .card{background:rgba(255,255,255,.92);border:1px solid #eaf0f6;border-radius:28px;box-shadow:0 20px 55px rgba(15,23,42,.07);backdrop-filter:blur(10px)}
+    .field{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:18px;padding:13px 14px;font-weight:800;outline:none;transition:.18s ease;}
+    .field:focus{background:#fff;border-color:var(--primary);box-shadow:0 0 0 4px rgba(20,69,77,.10)}
+    .label{display:block;margin:0 6px 8px 0;font-size:12px;font-weight:900;color:#64748b}.hint{font-size:11px;font-weight:800;color:#94a3b8;margin:6px 6px 0 0}
+    .btn{border:0;border-radius:999px;padding:12px 16px;font-weight:900;cursor:pointer;transition:.18s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}.btn:active{transform:scale(.98)}
+    .btn-primary{background:var(--primary);color:#fff}.btn-accent{background:var(--accent);color:#fff}.btn-soft{background:#f1f5f9;color:#334155}.btn-ok{background:#dcfce7;color:#166534}.btn-danger{background:#fee2e2;color:#b91c1c}.btn-warn{background:#fef3c7;color:#92400e}.btn-info{background:#dbeafe;color:#1d4ed8}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900}.pill-ok{background:#dcfce7;color:#166534}.pill-off{background:#fee2e2;color:#991b1b}.pill-neutral{background:#eef2ff;color:#3730a3}.pill-warn{background:#fef3c7;color:#92400e}
+    .grid-auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:14px}.mini{border:1px solid #edf2f7;background:#f8fafc;border-radius:22px;padding:14px}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;background:#111827;color:#fff;border-radius:999px;padding:12px 18px;font-size:13px;font-weight:900;box-shadow:0 18px 45px rgba(0,0,0,.22);display:none}.toast.show{display:block;animation:pop .18s ease}@keyframes pop{from{opacity:.3;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}.hidden{display:none!important}.table-wrap{overflow-x:auto;border:1px solid #edf2f7;border-radius:22px;background:#fff}table{width:100%;border-collapse:separate;border-spacing:0;min-width:950px}th{background:#f8fafc;color:#64748b;text-align:right;font-size:12px;font-weight:900;padding:14px;border-bottom:1px solid #edf2f7}td{padding:13px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;font-weight:800;vertical-align:middle}.ltr{direction:ltr;text-align:left}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.copybox{background:#0f172a;color:#e2e8f0;border-radius:18px;padding:14px;direction:ltr;text-align:left;overflow:auto;font-size:12px}.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.35);z-index:50;padding:16px}.modal.show{display:flex}.modal-card{width:min(560px,100%);background:#fff;border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.25);padding:18px}.topbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#f8fafc 70%,rgba(248,250,252,.84));backdrop-filter:blur(10px);padding-top:16px;padding-bottom:14px}
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <section id="loginScreen" class="login-wrap hidden">
+    <div class="card w-full max-w-md p-6">
+      <div class="w-20 h-20 mx-auto rounded-[24px] bg-[#14454d]/10 text-[#14454d] flex items-center justify-center mb-4">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a3 3 0 10-2.8 4H5l-2 2 2 2-2 2h4l2-2h3.2A3 3 0 1015 7z"/></svg>
+      </div>
+      <h1 class="text-2xl font-black text-center text-[#14454d]">أدمن مفاتيح الكاشير</h1>
+      <p class="text-center text-sm text-slate-400 font-bold mt-2 mb-6">دخول بنفس بيانات أدمن المتجر</p>
+      <div class="mb-4"><label class="label">البريد الإلكتروني</label><input id="loginEmail" type="email" class="field" placeholder="اكتب البريد الإلكتروني"></div>
+      <div class="mb-5"><label class="label">كلمة المرور</label><input id="loginPassword" type="password" class="field" placeholder="اكتب كلمة المرور"></div>
+      <button class="btn btn-primary w-full" onclick="loginAdmin()">دخول</button>
+    </div>
+  </section>
+
+  <section id="appScreen">
+    <div class="max-w-7xl mx-auto px-4 pb-10">
+      <div class="topbar">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-black text-[#14454d]">إدارة مفاتيح الكاشير</h1>
+            <p class="text-sm text-slate-400 font-bold mt-1">إنشاء مفاتيح، إيقافها، تحديد مدة الاشتراك، وربط مفتاح المتجر الحالي بدون شاشة دخول.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="btn btn-soft" onclick="location.reload()">تحديث</button>
+            <button class="btn btn-info" onclick="openCashier()">فتح الكاشير</button>
+            <button class="btn btn-accent" onclick="resetForm();window.scrollTo({top:0,behavior:'smooth'})">مفتاح جديد</button>
+            <button class="btn btn-soft" onclick="openStoreAdmin()">أدمن المتجر</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini mb-4 border border-amber-200 bg-amber-50 text-amber-900 font-black text-sm">
+        صفحة مفاتيح الكاشير تفتح مباشرة بدون تسجيل دخول، لذلك احمِ رابط الصفحة وقواعد Firebase قبل نشرها للعامة.
+      </div>
+
+      <div class="grid lg:grid-cols-[440px_1fr] gap-4 items-start">
+        <div class="card p-5">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div>
+              <h2 id="formTitle" class="text-xl font-black text-[#14454d]">إنشاء مفتاح جديد</h2>
+              <p class="text-xs text-slate-400 font-bold mt-1">كل مفتاح يكون له بيانات ومخزون وفواتير خاصة به.</p>
+            </div>
+            <span id="editingBadge" class="pill pill-neutral hidden">تعديل</span>
+          </div>
+
+          <div class="grid-auto">
+            <div class="md:col-span-2">
+              <label class="label">المفتاح</label>
+              <div class="flex gap-2">
+                <input id="keyInput" class="field ltr mono" placeholder="CSH-XXXX-XXXX" autocomplete="off">
+                <button class="btn btn-soft" onclick="generateKey()" type="button">توليد</button>
+              </div>
+              <div class="hint">هذا المفتاح يكتبه صاحب الكاشير في شاشة الدخول.</div>
+            </div>
+            <div><label class="label">اسم صاحب المفتاح</label><input id="ownerName" class="field" placeholder="مثال: محمد"></div>
+            <div><label class="label">اسم المحل</label><input id="shopName" class="field" placeholder="مثال: فرع الرئيسي"></div>
+            <div><label class="label">رقم الهاتف</label><input id="ownerPhone" class="field ltr" placeholder="079..."></div>
+            <div><label class="label">الحالة</label><select id="status" class="field"><option value="active">مفعل</option><option value="inactive">موقوف</option></select></div>
+            <div><label class="label">نوع التشغيل</label><select id="appMode" class="field"><option value="online">أونلاين / مزامنة</option><option value="offline">أوفلاين</option></select></div>
+            <div><label class="label">مدة الاشتراك</label><select id="durationType" class="field" onchange="syncDurationVisibility()"><option value="month">شهور</option><option value="day">أيام</option><option value="year">سنوات</option><option value="hour">ساعات</option><option value="minute">دقائق</option><option value="unlimited">غير محدود</option></select></div>
+            <div><label class="label">قيمة المدة</label><input id="durationValue" type="number" min="1" class="field" value="1"></div>
+            <div><label class="label">عدد الأجهزة</label><select id="maxLogins" class="field"><option value="unlimited">غير محدود</option><option value="1">جهاز واحد</option><option value="2">جهازين</option><option value="3">3 أجهزة</option><option value="5">5 أجهزة</option></select></div>
+            <div><label class="label">العملة</label><div class="grid grid-cols-[1fr_90px] gap-2"><input id="currencyName" class="field" value="شيكل"><input id="currencySymbol" class="field" value="₪"></div></div>
+            <label class="mini flex items-center gap-3 cursor-pointer"><input id="allowOfflineFallback" type="checkbox" class="w-5 h-5 accent-[#14454d]"><span class="font-black text-sm">السماح بفتح نسخة أوفلاين عند انقطاع النت</span></label>
+            <label class="mini flex items-center gap-3 cursor-pointer"><input id="rememberSession" type="checkbox" class="w-5 h-5 accent-[#14454d]" checked><span class="font-black text-sm">حفظ الجلسة على جهاز الكاشير</span></label>
+            <div class="md:col-span-2"><label class="label">ملاحظات</label><textarea id="note" rows="3" class="field" placeholder="ملاحظات داخلية فقط"></textarea></div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mt-5">
+            <button class="btn btn-primary flex-1" onclick="saveKey()">حفظ المفتاح</button>
+            <button class="btn btn-soft" onclick="resetForm()">تفريغ</button>
+          </div>
+          <div id="currentStoreKeyBox" class="mini mt-4 text-sm font-black text-slate-600"></div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="card p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-xl font-black text-[#14454d]">المفاتيح الحالية</h2>
+                <p class="text-xs text-slate-400 font-bold mt-1">اضغط استخدام للمتجر حتى يعتمد المتجر هذا المفتاح في مزامنة المخزون والفواتير.</p>
+              </div>
+              <input id="searchInput" class="field max-w-sm" placeholder="بحث باسم، هاتف، مفتاح..." oninput="renderKeys()">
+            </div>
+            <div id="statsBox" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
+            <div class="table-wrap"><table><thead><tr><th>المفتاح</th><th>العميل/المحل</th><th>الخطة</th><th>الأجهزة</th><th>الانتهاء</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="keysTbody"><tr><td colspan="7" class="text-center text-slate-400 py-8">جاري التحميل...</td></tr></tbody></table></div>
+          </div>
+
+          <div class="card p-5">
+            <h2 class="text-xl font-black text-[#14454d] mb-3">مسارات الربط</h2>
+            <div class="copybox" id="pathsPreview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="confirmModal" class="modal"><div class="modal-card"><h3 id="confirmTitle" class="font-black text-xl text-[#14454d] mb-2">تأكيد</h3><p id="confirmText" class="text-sm text-slate-500 font-bold leading-7 mb-5"></p><div class="flex gap-2 justify-end"><button class="btn btn-soft" onclick="closeConfirm(false)">إلغاء</button><button id="confirmOkBtn" class="btn btn-danger" onclick="closeConfirm(true)">تأكيد</button></div></div></div>
+
+<script>
+const firebaseConfig5546 = {
+  apiKey: "AIzaSyANRh5cSHuNzSJrSRa-vslWownoYos2mT4",
+  authDomain: "bbbb-a5332.firebaseapp.com",
+  databaseURL: "https://bbbb-a5332-default-rtdb.firebaseio.com",
+  projectId: "bbbb-a5332",
+  storageBucket: "bbbb-a5332.firebasestorage.app",
+  messagingSenderId: "261450260086",
+  appId: "1:261450260086:web:5aa538c40ea527efb64957",
+  measurementId: "G-QMG6J94FBE"
+};
+
+const PATHS = {
+  admin: "settingsMohanad/adminMohanad",
+  store: "settingsMohanad/storeMohanad",
+  licenses: "DFDFG_licenses",
+  clients: "DFDFG_clients"
+};
+const DEFAULT_ADMIN = { email:"oskar@gmail.com", password:"0000" };
+let db, allKeys = [], editingSafeKey = "", confirmResolver = null, currentStoreKey = "";
+
+firebase.initializeApp(firebaseConfig5546);
+db = firebase.database();
+
+document.addEventListener("DOMContentLoaded", () => {
+  showApp();
+  resetForm();
+  syncDurationVisibility();
+});
+
+function clean(v){ return String(v == null ? "" : v).trim(); }
+function safeKey(key){ return clean(key).replace(/[.#$/\[\]]/g,"_"); }
+function nowIso(){ return new Date().toISOString(); }
+function $(id){ return document.getElementById(id); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+function escapeHtml(s){ return clean(s).replace(/[&<>'"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[ch])); }
+function fmtDate(v){ if(!v) return "-"; try{return new Date(v).toLocaleString("ar-EG");}catch{return v;} }
+function durationLabel(type,value){ const map={minute:"دقائق",hour:"ساعات",day:"أيام",month:"شهور",year:"سنوات",unlimited:"غير محدود"}; return type === "unlimited" ? "غير محدود" : `${value || 0} ${map[type] || type || ""}`; }
+
+async function loginAdmin(){
+  const email = clean($("loginEmail").value);
+  const pass = clean($("loginPassword").value);
+  if(!email || !pass) return toast("اكتب البريد وكلمة المرور");
+  const snap = await db.ref(PATHS.admin).get();
+  const admin = snap.exists() ? snap.val() : DEFAULT_ADMIN;
+  if(email !== clean(admin.email) || pass !== clean(admin.password)) return toast("بيانات الدخول غير صحيحة");
+  sessionStorage.setItem("cashierKeysAdminLogged","1");
+  showApp();
+}
+function logoutAdmin(){ location.reload(); }
+function showApp(){
+  const login = $("loginScreen");
+  const app = $("appScreen");
+  if(login) login.classList.add("hidden");
+  if(app) app.classList.remove("hidden");
+  if(!showApp._attached){ showApp._attached = true; attachListeners(); }
+}
+function openStoreAdmin(){ window.open("admin.html", "_blank"); }
+
+function generateKey(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const part = n => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join("");
+  $("keyInput").value = `CSH-${part(4)}-${part(4)}-${part(4)}`;
+}
+function syncDurationVisibility(){
+  const type = $("durationType").value;
+  $("durationValue").disabled = type === "unlimited";
+  if(type === "unlimited") $("durationValue").value = "0";
+  else if(Number($("durationValue").value) <= 0) $("durationValue").value = "1";
+}
+function resetForm(){
+  editingSafeKey = "";
+  $("formTitle").textContent = "إنشاء مفتاح جديد";
+  $("editingBadge").classList.add("hidden");
+  generateKey();
+  $("ownerName").value = "";
+  $("shopName").value = "";
+  $("ownerPhone").value = "";
+  $("status").value = "active";
+  $("appMode").value = "online";
+  $("durationType").value = "month";
+  $("durationValue").value = "1";
+  $("maxLogins").value = "unlimited";
+  $("currencyName").value = "شيكل";
+  $("currencySymbol").value = "₪";
+  $("allowOfflineFallback").checked = false;
+  $("rememberSession").checked = true;
+  $("note").value = "";
+  syncDurationVisibility();
+}
+async function saveKey(){
+  const key = clean($("keyInput").value);
+  if(!key) return toast("ولّد أو اكتب المفتاح أولاً");
+  const sk = safeKey(key);
+  const durationType = $("durationType").value;
+  const durationValue = durationType === "unlimited" ? 0 : Math.max(1, Number($("durationValue").value || 1));
+  const oldSnap = await db.ref(`${PATHS.licenses}/${sk}`).get();
+  const old = oldSnap.exists() ? oldSnap.val() : {};
+  const data = {
+    key, safeKey: sk,
+    ownerName: clean($("ownerName").value),
+    shopName: clean($("shopName").value) || "المحل الرئيسي",
+    ownerPhone: clean($("ownerPhone").value),
+    status: $("status").value,
+    appMode: $("appMode").value,
+    durationType,
+    durationValue,
+    maxLogins: $("maxLogins").value,
+    usedLogins: Number(old.usedLogins || 0),
+    allowOfflineFallback: $("allowOfflineFallback").checked,
+    rememberSession: $("rememberSession").checked,
+    note: clean($("note").value),
+    createdAt: old.createdAt || nowIso(),
+    startedAt: old.startedAt || null,
+    expiresAt: old.expiresAt || null,
+    lastLoginAt: old.lastLoginAt || null,
+    updatedAt: nowIso()
+  };
+  await db.ref(`${PATHS.licenses}/${sk}`).set(data);
+  await ensureClientDefaults(sk, data);
+  toast(editingSafeKey ? "تم تعديل المفتاح" : "تم إنشاء المفتاح");
+  resetForm();
+}
+async function ensureClientDefaults(sk, license){
+  const base = `${PATHS.clients}/${sk}`;
+  const snap = await db.ref(base).get();
+  const current = snap.exists() ? snap.val() : {};
+  const updates = {};
+  if(!current.stores || !current.stores.default){
+    updates[`${base}/stores/default`] = { id:"default", name: license.shopName || "المحل الرئيسي", logo:"", createdAt: nowIso() };
+  }
+  if(!current.settings){
+    updates[`${base}/settings`] = { currencyName: clean($("currencyName").value) || "شيكل", currencySymbol: clean($("currencySymbol").value) || "₪", appMode: license.appMode || "online", paymentInfo:"" };
+  }else{
+    updates[`${base}/settings/appMode`] = license.appMode || "online";
+    updates[`${base}/settings/currencyName`] = clean($("currencyName").value) || current.settings.currencyName || "شيكل";
+    updates[`${base}/settings/currencySymbol`] = clean($("currencySymbol").value) || current.settings.currencySymbol || "₪";
+  }
+  if(!current.counters || current.counters.invoiceAutoNumber == null){ updates[`${base}/counters/invoiceAutoNumber`] = 0; }
+  updates[`${base}/meta/licenseKey`] = license.key;
+  updates[`${base}/meta/updatedAt`] = nowIso();
+  await db.ref().update(updates);
+}
+
+function attachListeners(){
+  db.ref(PATHS.licenses).on("value", snap => { const v=snap.val()||{}; allKeys = Object.keys(v).map(id => ({...v[id], _id:id})).sort((a,b)=> clean(b.createdAt).localeCompare(clean(a.createdAt))); renderKeys(); });
+  db.ref(`${PATHS.store}/cashierLicenseKey`).on("value", snap => { currentStoreKey = snap.val() || ""; renderStoreKeyBox(); renderKeys(); });
+  renderPaths();
+}
+function renderStoreKeyBox(){
+  $("currentStoreKeyBox").innerHTML = currentStoreKey ? `مفتاح المتجر الحالي: <span class="mono ltr inline-block">${escapeHtml(currentStoreKey)}</span>` : "لا يوجد مفتاح مربوط بالمتجر حاليًا.";
+}
+function renderStats(list=allKeys){
+  const active=list.filter(k => (k.status||"active") === "active").length;
+  const inactive=list.filter(k => (k.status||"active") === "inactive").length;
+  const linked=list.filter(k => clean(k.key) === clean(currentStoreKey)).length;
+  const online=list.filter(k => (k.appMode||"online") === "online").length;
+  $("statsBox").innerHTML = [
+    ["كل المفاتيح", list.length, "pill-neutral"],["المفعلة", active, "pill-ok"],["الموقوفة", inactive, "pill-off"],["مفتاح المتجر", linked ? "مربوط" : "غير محدد", linked ? "pill-ok" : "pill-warn"]
+  ].map(s => `<div class="mini"><div class="text-xs text-slate-400 font-black">${s[0]}</div><div class="mt-1 text-lg font-black text-slate-800">${s[1]}</div></div>`).join("");
+}
+function renderKeys(){
+  const q = clean($("searchInput")?.value).toLowerCase();
+  let list = allKeys.filter(k => !q || [k.key,k.ownerName,k.shopName,k.ownerPhone,k.status,k.appMode].some(v => clean(v).toLowerCase().includes(q)));
+  renderStats(list);
+  if(!list.length){ $("keysTbody").innerHTML = `<tr><td colspan="7" class="text-center text-slate-400 py-8">لا توجد مفاتيح مطابقة</td></tr>`; return; }
+  $("keysTbody").innerHTML = list.map(k => {
+    const status = (k.status||"active") === "active" ? `<span class="pill pill-ok">مفعل</span>` : `<span class="pill pill-off">موقوف</span>`;
+    const linked = clean(k.key) === clean(currentStoreKey) ? `<span class="pill pill-neutral mt-1">مفتاح المتجر</span>` : "";
+    const max = k.maxLogins === "unlimited" ? "غير محدود" : Number(k.maxLogins || 1);
+    const used = Number(k.usedLogins || 0);
+    return `<tr>
+      <td><div class="mono ltr font-black">${escapeHtml(k.key)}</div>${linked}</td>
+      <td><div>${escapeHtml(k.ownerName || "-")}</div><div class="text-xs text-slate-400 mt-1">${escapeHtml(k.shopName || "المحل الرئيسي")} · ${escapeHtml(k.ownerPhone || "")}</div></td>
+      <td><div>${(k.appMode||"online") === "online" ? "أونلاين" : "أوفلاين"}</div><div class="text-xs text-slate-400 mt-1">${durationLabel(k.durationType||"unlimited", k.durationValue)}</div></td>
+      <td>${used} / ${max}</td>
+      <td><div>${fmtDate(k.expiresAt)}</div><div class="text-xs text-slate-400 mt-1">آخر دخول: ${fmtDate(k.lastLoginAt)}</div></td>
+      <td>${status}</td>
+      <td><div class="flex flex-wrap gap-1">
+        <button class="btn btn-soft !py-2 !px-3" onclick="editKey('${escapeHtml(k._id)}')">تعديل</button>
+        <button class="btn btn-info !py-2 !px-3" onclick="copyKey('${escapeHtml(k.key)}')">نسخ</button>
+        <button class="btn btn-ok !py-2 !px-3" onclick="setAsStoreKey('${escapeHtml(k.key)}')">استخدام للمتجر</button>
+        <button class="btn btn-warn !py-2 !px-3" onclick="resetDevices('${escapeHtml(k._id)}')">تصفير الأجهزة</button>
+        <button class="btn ${(k.status||"active") === "active" ? "btn-danger" : "btn-ok"} !py-2 !px-3" onclick="toggleKey('${escapeHtml(k._id)}','${(k.status||"active") === "active" ? "inactive" : "active"}')">${(k.status||"active") === "active" ? "إيقاف" : "تفعيل"}</button>
+        <button class="btn btn-danger !py-2 !px-3" onclick="deleteKey('${escapeHtml(k._id)}')">حذف</button>
+      </div></td>
+    </tr>`;
+  }).join("");
+}
+function editKey(id){
+  const k = allKeys.find(x => x._id === id); if(!k) return;
+  editingSafeKey = id;
+  $("formTitle").textContent = "تعديل مفتاح";
+  $("editingBadge").classList.remove("hidden");
+  $("keyInput").value = k.key || id;
+  $("ownerName").value = k.ownerName || "";
+  $("shopName").value = k.shopName || "";
+  $("ownerPhone").value = k.ownerPhone || "";
+  $("status").value = k.status || "active";
+  $("appMode").value = k.appMode || "online";
+  $("durationType").value = k.durationType || "unlimited";
+  $("durationValue").value = k.durationType === "unlimited" ? "0" : (k.durationValue || 1);
+  $("maxLogins").value = String(k.maxLogins || "1");
+  $("allowOfflineFallback").checked = k.allowOfflineFallback === true;
+  $("rememberSession").checked = k.rememberSession !== false;
+  $("note").value = k.note || "";
+  const s = k._settings || {};
+  $("currencyName").value = s.currencyName || "شيكل";
+  $("currencySymbol").value = s.currencySymbol || "₪";
+  syncDurationVisibility(); window.scrollTo({top:0,behavior:"smooth"});
+}
+async function toggleKey(id,status){ await db.ref(`${PATHS.licenses}/${id}`).update({ status, updatedAt:nowIso() }); toast(status === "active" ? "تم تفعيل المفتاح" : "تم إيقاف المفتاح"); }
+async function resetDevices(id){ if(!(await confirmBox("تصفير الأجهزة", "سيتم جعل عدد الأجهزة المستخدمة صفر، ويمكن لصاحب المفتاح الدخول من جديد."))) return; await db.ref(`${PATHS.licenses}/${id}`).update({ usedLogins:0, startedAt:null, expiresAt:null, lastLoginAt:null, updatedAt:nowIso() }); toast("تم تصفير الأجهزة والمدة"); }
+async function deleteKey(id){ if(!(await confirmBox("حذف المفتاح", "سيتم حذف المفتاح. بيانات العميل في الكاشير ستبقى موجودة حتى لا تضيع الفواتير والمخزون."))) return; await db.ref(`${PATHS.licenses}/${id}`).remove(); toast("تم حذف المفتاح"); }
+async function setAsStoreKey(key){ await db.ref(PATHS.store).update({ cashierLicenseKey:key, updatedAt:Date.now() }); toast("تم ربط هذا المفتاح بالمتجر"); }
+async function copyKey(key){ try{ await navigator.clipboard.writeText(key); toast("تم نسخ المفتاح"); }catch{ prompt("انسخ المفتاح", key); } }
+function openCashier(){ window.open("../cashier/index.html", "_blank"); }
+function renderPaths(){ $("pathsPreview").textContent = `${PATHS.licenses}/{cashierKey}\n${PATHS.clients}/{cashierKey}/products\n${PATHS.clients}/{cashierKey}/invoices\n${PATHS.store}/cashierLicenseKey`; }
+function confirmBox(title,text){ $("confirmTitle").textContent=title; $("confirmText").textContent=text; $("confirmModal").classList.add("show"); return new Promise(res => confirmResolver=res); }
+function closeConfirm(ok){ $("confirmModal").classList.remove("show"); if(confirmResolver){ confirmResolver(ok); confirmResolver=null; } }
+
+window.loginAdmin=loginAdmin;window.logoutAdmin=logoutAdmin;window.openStoreAdmin=openStoreAdmin;window.generateKey=generateKey;window.syncDurationVisibility=syncDurationVisibility;window.resetForm=resetForm;window.saveKey=saveKey;window.renderKeys=renderKeys;window.editKey=editKey;window.toggleKey=toggleKey;window.resetDevices=resetDevices;window.deleteKey=deleteKey;window.setAsStoreKey=setAsStoreKey;window.copyKey=copyKey;window.openCashier=openCashier;window.closeConfirm=closeConfirm;
+</script>
+</body>
+</html>
